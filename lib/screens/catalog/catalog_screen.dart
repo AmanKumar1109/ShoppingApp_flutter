@@ -372,7 +372,7 @@ class _CatalogScreenState extends ConsumerState<CatalogScreen> {
                         gridDelegate:
                             const SliverGridDelegateWithFixedCrossAxisCount(
                               crossAxisCount: 2,
-                              childAspectRatio: 0.67,
+                              childAspectRatio: 0.62,
                               crossAxisSpacing: 14,
                               mainAxisSpacing: 14,
                             ),
@@ -641,13 +641,10 @@ class _CatalogScreenState extends ConsumerState<CatalogScreen> {
                   top: Radius.circular(17),
                 ),
                 child: Container(
-                  height: 120,
+                  height: 140,
                   width: double.infinity,
                   color: const Color(0xFFF9FAFB),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 8,
-                  ),
+                  padding: const EdgeInsets.all(4),
                   child: Hero(
                     tag: heroTag,
                     child: Material(
@@ -655,6 +652,8 @@ class _CatalogScreenState extends ConsumerState<CatalogScreen> {
                       child: FastCachedImage(
                         imageUrl: product.imageUrl,
                         fit: BoxFit.contain,
+                        width: double.infinity,
+                        height: double.infinity,
                       ),
                     ),
                   ),

@@ -10,6 +10,8 @@ import 'theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  PaintingBinding.instance.imageCache.clear();
+  PaintingBinding.instance.imageCache.clearLiveImages();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   // Register top-level FCM background handler

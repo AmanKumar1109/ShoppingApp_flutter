@@ -104,7 +104,7 @@ class WishlistScreen extends ConsumerWidget {
               padding: const EdgeInsets.all(20),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
-                childAspectRatio: 0.68,
+                childAspectRatio: 0.62,
                 crossAxisSpacing: 14,
                 mainAxisSpacing: 14,
               ),
@@ -246,19 +246,21 @@ class WishlistScreen extends ConsumerWidget {
                   top: Radius.circular(17),
                 ),
                 child: Container(
-                  height: 110,
+                  height: 135,
                   width: double.infinity,
                   color: const Color(0xFFF9FAFB),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 8,
-                  ),
+                  padding: const EdgeInsets.all(4),
                   child: Hero(
                     tag: heroTag,
                     child: Material(
                       type: MaterialType.transparency,
                       child: imageUrl.isNotEmpty
-                          ? FastCachedImage(imageUrl: imageUrl, fit: BoxFit.contain)
+                          ? FastCachedImage(
+                              imageUrl: imageUrl,
+                              fit: BoxFit.contain,
+                              width: double.infinity,
+                              height: double.infinity,
+                            )
                           : Container(color: const Color(0xFFFFF4B8)),
                     ),
                   ),

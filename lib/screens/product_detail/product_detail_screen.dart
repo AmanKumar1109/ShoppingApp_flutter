@@ -936,7 +936,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
         ),
         const SizedBox(height: 12),
         SizedBox(
-          height: 245,
+          height: 260,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -989,12 +989,14 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                   borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(17),
                   ),
-                  child: SizedBox(
-                    height: 115,
+                  child: Container(
+                    height: 130,
                     width: double.infinity,
+                    color: const Color(0xFFF9FAFB),
+                    padding: const EdgeInsets.all(4),
                     child: FastCachedImage(
                       imageUrl: product.imageUrl,
-                      fit: BoxFit.cover,
+                      fit: BoxFit.contain,
                     ),
                   ),
                 ),

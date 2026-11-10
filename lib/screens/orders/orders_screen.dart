@@ -189,7 +189,7 @@ class OrdersScreen extends ConsumerWidget {
                 physics: const NeverScrollableScrollPhysics(),
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
-                  childAspectRatio: 0.63,
+                  childAspectRatio: 0.60,
                   crossAxisSpacing: 14,
                   mainAxisSpacing: 14,
                 ),
@@ -614,13 +614,10 @@ class OrdersScreen extends ConsumerWidget {
                     top: Radius.circular(17),
                   ),
                   child: Container(
-                    height: 108,
+                    height: 130,
                     width: double.infinity,
                     color: const Color(0xFFF9FAFB),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 8,
-                    ),
+                    padding: const EdgeInsets.all(4),
                     child: Hero(
                       tag: heroTag,
                       child: Material(
@@ -628,6 +625,8 @@ class OrdersScreen extends ConsumerWidget {
                         child: FastCachedImage(
                           imageUrl: product.imageUrl,
                           fit: BoxFit.contain,
+                          width: double.infinity,
+                          height: double.infinity,
                         ),
                       ),
                     ),

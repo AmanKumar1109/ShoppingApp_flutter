@@ -386,7 +386,7 @@ class HomeTab extends ConsumerWidget {
                           gridDelegate:
                               const SliverGridDelegateWithFixedCrossAxisCount(
                                 crossAxisCount: 2,
-                                childAspectRatio: 0.68,
+                                childAspectRatio: 0.62,
                                 crossAxisSpacing: 12,
                                 mainAxisSpacing: 14,
                               ),
@@ -455,7 +455,7 @@ class HomeTab extends ConsumerWidget {
 
             // Special Deals Horizontal Carousel
             SizedBox(
-              height: 248,
+              height: 268,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -622,7 +622,7 @@ class HomeTab extends ConsumerWidget {
               ),
               const SizedBox(height: 12),
               SizedBox(
-                height: 248,
+                height: 268,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
                   padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -665,7 +665,7 @@ class HomeTab extends ConsumerWidget {
 
             // Trending Products Horizontal Carousel
             SizedBox(
-              height: 248,
+              height: 268,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -827,7 +827,7 @@ class HomeTab extends ConsumerWidget {
               ),
               const SizedBox(height: 12),
               SizedBox(
-                height: 248,
+                height: 268,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
                   padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -934,13 +934,10 @@ class HomeTab extends ConsumerWidget {
                   top: Radius.circular(19),
                 ),
                 child: Container(
-                  height: 120,
+                  height: 140,
                   width: double.infinity,
                   color: const Color(0xFFF9FAFB),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 8,
-                  ),
+                  padding: const EdgeInsets.all(4),
                   child: Hero(
                     tag: effectiveHeroTag,
                     child: Material(
@@ -948,6 +945,8 @@ class HomeTab extends ConsumerWidget {
                       child: FastCachedImage(
                         imageUrl: product.imageUrl,
                         fit: BoxFit.contain,
+                        width: double.infinity,
+                        height: double.infinity,
                       ),
                     ),
                   ),

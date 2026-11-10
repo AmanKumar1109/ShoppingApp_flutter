@@ -8,6 +8,7 @@ class FastCachedImage extends StatelessWidget {
   final double? height;
   final BoxFit fit;
   final double borderRadius;
+  final Alignment alignment;
   final Widget? errorWidget;
 
   const FastCachedImage({
@@ -15,50 +16,53 @@ class FastCachedImage extends StatelessWidget {
     required this.imageUrl,
     this.width,
     this.height,
-    this.fit = BoxFit.cover,
+    this.fit = BoxFit.contain,
     this.borderRadius = 0,
+    this.alignment = Alignment.center,
     this.errorWidget,
   });
 
   @override
   Widget build(BuildContext context) {
-    if (imageUrl.isEmpty) {
+    final cleanUrl = imageUrl.trim();
+    if (cleanUrl.isEmpty) {
       return _buildErrorPlaceholder();
     }
 
     Widget content;
     try {
       content = CachedNetworkImage(
-        imageUrl: imageUrl,
+        imageUrl: cleanUrl,
         width: width,
         height: height,
         fit: fit,
-        memCacheWidth: width != null ? (width! * 2).toInt() : 400,
-        memCacheHeight: height != null ? (height! * 2).toInt() : 400,
+        alignment: alignment,
+        // Using disk cache limits without specifying both fixed square memCache dimensions
+        // ensures Flutter preserves the exact original natural aspect ratio of the image!
+        maxWidthDiskCache: 1200,
+        maxHeightDiskCache: 1200,
         placeholder: (context, url) => SkeletonLoader(
           width: width ?? double.infinity,
           height: height ?? double.infinity,
           borderRadius: borderRadius,
         ),
         errorWidget: (context, url, error) => Image.network(
-          imageUrl,
+          cleanUrl,
           width: width,
           height: height,
           fit: fit,
-          cacheWidth: 400,
-          cacheHeight: 400,
-          errorBuilder: (_, _, _) => _buildErrorPlaceholder(),
+          alignment: alignment,
+          errorBuilder: (_, _, _) => errorWidget ?? _buildErrorPlaceholder(),
         ),
       );
     } catch (_) {
       content = Image.network(
-        imageUrl,
+        cleanUrl,
         width: width,
         height: height,
         fit: fit,
-        cacheWidth: 400,
-        cacheHeight: 400,
-        errorBuilder: (_, _, _) => _buildErrorPlaceholder(),
+        alignment: alignment,
+        errorBuilder: (_, _, _) => errorWidget ?? _buildErrorPlaceholder(),
       );
     }
 
