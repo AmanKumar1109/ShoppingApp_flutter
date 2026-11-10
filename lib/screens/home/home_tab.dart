@@ -455,7 +455,7 @@ class HomeTab extends ConsumerWidget {
 
             // Special Deals Horizontal Carousel
             SizedBox(
-              height: 240,
+              height: 248,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -622,7 +622,7 @@ class HomeTab extends ConsumerWidget {
               ),
               const SizedBox(height: 12),
               SizedBox(
-                height: 240,
+                height: 248,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
                   padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -665,7 +665,7 @@ class HomeTab extends ConsumerWidget {
 
             // Trending Products Horizontal Carousel
             SizedBox(
-              height: 240,
+              height: 248,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -827,7 +827,7 @@ class HomeTab extends ConsumerWidget {
               ),
               const SizedBox(height: 12),
               SizedBox(
-                height: 240,
+                height: 248,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
                   padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -933,16 +933,21 @@ class HomeTab extends ConsumerWidget {
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(19),
                 ),
-                child: SizedBox(
-                  height: 116,
+                child: Container(
+                  height: 120,
                   width: double.infinity,
+                  color: const Color(0xFFF9FAFB),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 8,
+                  ),
                   child: Hero(
                     tag: effectiveHeroTag,
                     child: Material(
                       type: MaterialType.transparency,
                       child: FastCachedImage(
                         imageUrl: product.imageUrl,
-                        fit: BoxFit.cover,
+                        fit: BoxFit.contain,
                       ),
                     ),
                   ),

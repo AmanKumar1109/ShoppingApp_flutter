@@ -450,12 +450,14 @@ class CartScreen extends ConsumerWidget {
                           children: [
                             ClipRRect(
                               borderRadius: BorderRadius.circular(10),
-                              child: SizedBox(
+                              child: Container(
                                 width: 52,
                                 height: 52,
+                                color: const Color(0xFFF9FAFB),
+                                padding: const EdgeInsets.all(4),
                                 child: FastCachedImage(
                                   imageUrl: product.imageUrl,
-                                  fit: BoxFit.cover,
+                                  fit: BoxFit.contain,
                                 ),
                               ),
                             ),
@@ -777,16 +779,21 @@ class CartScreen extends ConsumerWidget {
                   borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(15),
                   ),
-                  child: SizedBox(
-                    height: 98,
+                  child: Container(
+                    height: 104,
                     width: double.infinity,
+                    color: const Color(0xFFF9FAFB),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 6,
+                    ),
                     child: Hero(
                       tag: heroTag,
                       child: Material(
                         type: MaterialType.transparency,
                         child: FastCachedImage(
                           imageUrl: product.imageUrl,
-                          fit: BoxFit.cover,
+                          fit: BoxFit.contain,
                         ),
                       ),
                     ),

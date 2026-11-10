@@ -640,16 +640,21 @@ class _CatalogScreenState extends ConsumerState<CatalogScreen> {
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(17),
                 ),
-                child: SizedBox(
+                child: Container(
                   height: 120,
                   width: double.infinity,
+                  color: const Color(0xFFF9FAFB),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 8,
+                  ),
                   child: Hero(
                     tag: heroTag,
                     child: Material(
                       type: MaterialType.transparency,
                       child: FastCachedImage(
                         imageUrl: product.imageUrl,
-                        fit: BoxFit.cover,
+                        fit: BoxFit.contain,
                       ),
                     ),
                   ),

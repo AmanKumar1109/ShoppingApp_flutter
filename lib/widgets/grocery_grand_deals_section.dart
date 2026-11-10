@@ -359,16 +359,18 @@ class GroceryGrandDealsSection extends ConsumerWidget {
             // Product Image at Bottom
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
-              child: SizedBox(
+              child: Container(
                 height: 110,
                 width: double.infinity,
+                color: Colors.white,
+                padding: const EdgeInsets.all(6),
                 child: Hero(
                   tag: 'hero_grand_deals_${product?.id ?? "featured"}',
                   child: Material(
                     type: MaterialType.transparency,
                     child: FastCachedImage(
                       imageUrl: imageUrl,
-                      fit: BoxFit.cover,
+                      fit: BoxFit.contain,
                     ),
                   ),
                 ),
@@ -454,12 +456,14 @@ class GroceryGrandDealsSection extends ConsumerWidget {
             // Image Thumbnail
             ClipRRect(
               borderRadius: BorderRadius.circular(10),
-              child: SizedBox(
+              child: Container(
                 height: 54,
                 width: double.infinity,
+                color: Colors.white,
+                padding: const EdgeInsets.all(4),
                 child: FastCachedImage(
                   imageUrl: imageUrl,
-                  fit: BoxFit.cover,
+                  fit: BoxFit.contain,
                 ),
               ),
             ),

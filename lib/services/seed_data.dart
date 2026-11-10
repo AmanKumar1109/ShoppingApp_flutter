@@ -397,14 +397,7 @@ class SeedData {
       isDeal: true,
       isTrending: true,
       isBogo: true,
-      tags: [
-        'bread',
-        'garlic bread',
-        'bakery',
-        'toast',
-        'wheat',
-        'bogo',
-      ],
+      tags: ['bread', 'garlic bread', 'bakery', 'toast', 'wheat', 'bogo'],
       description:
           'Soft and aromatic fresh artisanal garlic bread infused with herbs and butter.',
     ),
@@ -424,14 +417,7 @@ class SeedData {
       isDeal: false,
       isTrending: true,
       isBogo: false,
-      tags: [
-        'cake',
-        'brownie',
-        'chocolate',
-        'fudge',
-        'pastry',
-        'bakery',
-      ],
+      tags: ['cake', 'brownie', 'chocolate', 'fudge', 'pastry', 'bakery'],
       description:
           'Decadent moist chocolate fudge brownie with gooey dark chocolate chunks.',
     ),
@@ -550,7 +536,7 @@ class SeedData {
       offPercentage: 6,
       unit: '150 g bar',
       imageUrl:
-          'https://images.unsplash.com/photo-1548741487-18d968602274?w=500&auto=format&fit=crop',
+          'https://images.unsplash.com/photo-1549007994-cb92caebd54b?w=500&auto=format&fit=crop',
       rating: 5.0,
       reviewsCount: 620,
       isDeal: true,
