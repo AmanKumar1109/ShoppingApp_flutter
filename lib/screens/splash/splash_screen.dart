@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/auth_provider.dart';
 import '../../routes/app_routes.dart';
+import '../../services/notification_service.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -43,7 +44,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       if (!mounted) return;
       final auth = ref.read(authProvider);
       if (auth.isLoggedIn) {
-        Navigator.of(context).pushReplacementNamed(AppRoutes.home);
+        Navigator.of(context).pushReplacementNamed(AppRoutes.home).then((_) {
+          NotificationService.instance.handlePendingInitialNotification();
+        });
       } else {
         Navigator.of(context).pushReplacementNamed(AppRoutes.onboarding);
       }

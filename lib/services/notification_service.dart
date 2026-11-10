@@ -47,6 +47,8 @@ class NotificationService {
   bool _isInitialized = false;
   String? _fcmToken;
   String? get fcmToken => _fcmToken;
+  Map<String, dynamic>? _pendingInitialData;
+  Map<String, dynamic>? get pendingInitialData => _pendingInitialData;
 
   /// Initializes Local Notifications, Firebase Messaging permissions,
   /// notification channels, and sets up listeners for:
@@ -122,8 +124,12 @@ class NotificationService {
           debugPrint(
             'FCM Notification launched app from terminated/killed state: ${initialMessage.data}',
           );
-          Future.delayed(const Duration(milliseconds: 600), () {
-            _handleNotificationNavigation(initialMessage.data);
+          _pendingInitialData = initialMessage.data;
+          // Fallback timer in case splash screen does not consume it
+          Future.delayed(const Duration(milliseconds: 2500), () {
+            if (_pendingInitialData != null) {
+              handlePendingInitialNotification();
+            }
           });
         }
       }).catchError((e) {
@@ -133,6 +139,15 @@ class NotificationService {
       _isInitialized = true;
     } catch (e) {
       debugPrint('NotificationService initialization error: $e');
+    }
+  }
+
+  /// Dispatches pending cold-start push navigation once the initial screen/Home is ready.
+  void handlePendingInitialNotification() {
+    if (_pendingInitialData != null) {
+      final data = _pendingInitialData!;
+      _pendingInitialData = null;
+      _handleNotificationNavigation(data);
     }
   }
 

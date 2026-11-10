@@ -7,7 +7,7 @@ import '../models/product_model.dart';
 import 'seed_data.dart';
 
 class FirestoreService {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  FirebaseFirestore get _firestore => FirebaseFirestore.instance;
 
   // In-memory cache to prevent repeated server requests
   static List<ProductModel>? _cachedProducts;

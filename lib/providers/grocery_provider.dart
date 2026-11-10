@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/legacy.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/category_model.dart';
 import '../models/product_model.dart';
 import '../services/firestore_service.dart';
@@ -14,7 +16,7 @@ final groceryProvider = ChangeNotifierProvider<GroceryProvider>((ref) {
 });
 
 class GroceryProvider extends ChangeNotifier {
-  final FirestoreService _firestoreService = FirestoreService();
+  final FirestoreService _firestoreService;
 
   List<ProductModel> _products = [];
   List<CategoryModel> _rawCategories = [];
@@ -43,8 +45,47 @@ class GroceryProvider extends ChangeNotifier {
   int get displayLimit => _displayLimit;
   bool get isLoadingMore => _isLoadingMore;
 
-  GroceryProvider() {
-    _initRealTimeSync();
+  static const String _kCartPrefKey = 'cached_cart_items_v1';
+
+  GroceryProvider({bool autoSync = true, FirestoreService? firestoreService})
+      : _firestoreService = firestoreService ?? FirestoreService() {
+    _loadCartFromStorage();
+    if (autoSync) {
+      _initRealTimeSync();
+    }
+  }
+
+  Future<void> _loadCartFromStorage() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString(_kCartPrefKey);
+      if (raw != null && raw.isNotEmpty) {
+        final Map<String, dynamic> decoded = jsonDecode(raw);
+        _cartItems.clear();
+        decoded.forEach((key, val) {
+          if (val is int && val > 0) {
+            _cartItems[key] = val;
+          }
+        });
+        _recalculateCoupon();
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('Error loading cart from storage: $e');
+    }
+  }
+
+  Future<void> _persistCartToStorage() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (_cartItems.isEmpty) {
+        await prefs.remove(_kCartPrefKey);
+      } else {
+        await prefs.setString(_kCartPrefKey, jsonEncode(_cartItems));
+      }
+    } catch (e) {
+      debugPrint('Error saving cart to storage: $e');
+    }
   }
 
   @override
@@ -331,6 +372,7 @@ class GroceryProvider extends ChangeNotifier {
     } else {
       _cartItems[productId] = 1;
     }
+    _persistCartToStorage();
     _recalculateCoupon();
     notifyListeners();
   }
@@ -342,6 +384,7 @@ class GroceryProvider extends ChangeNotifier {
       } else {
         _cartItems.remove(productId);
       }
+      _persistCartToStorage();
       _recalculateCoupon();
       notifyListeners();
     }
@@ -352,6 +395,7 @@ class GroceryProvider extends ChangeNotifier {
     _appliedCouponCode = null;
     _couponDiscount = 0.0;
     _couponError = null;
+    _persistCartToStorage();
     notifyListeners();
   }
 
@@ -368,14 +412,22 @@ class GroceryProvider extends ChangeNotifier {
   double get cartTotalAmount {
     double total = 0.0;
     _cartItems.forEach((prodId, qty) {
-      final prod = _products.firstWhere(
-        (p) => p.id == prodId,
-        orElse: () => SeedData.fallbackProducts.firstWhere(
-          (fp) => fp.id == prodId,
-          orElse: () => SeedData.fallbackProducts.first,
-        ),
-      );
-      total += prod.price * qty;
+      ProductModel? prod;
+      try {
+        prod = _products.firstWhere((p) => p.id == prodId);
+      } catch (_) {
+        try {
+          prod = SeedData.fallbackProducts.firstWhere((fp) => fp.id == prodId);
+        } catch (_) {
+          prod = null;
+        }
+      }
+
+      // If product exists in active or fallback catalog, add price.
+      // If deleted/orphaned, safely contribute ₹0 instead of charging for wrong item!
+      if (prod != null) {
+        total += prod.price * qty;
+      }
     });
     return total;
   }
