@@ -33,9 +33,14 @@ class GroceryProvider extends ChangeNotifier {
   bool _isLoadingMore = false;
   StreamSubscription<List<ProductModel>>? _productsSub;
   StreamSubscription<List<CategoryModel>>? _categoriesSub;
+  StreamSubscription<List<Map<String, dynamic>>>? _categoryCoversSub;
+  StreamSubscription<List<Map<String, dynamic>>?>? _homeSectionsSub;
+  Map<String, Map<String, dynamic>> _categoryCoversMap = {};
+  List<Map<String, dynamic>>? _homeSections;
 
   List<ProductModel> get products => _products;
   List<CategoryModel> get categories => _categoriesList;
+  List<Map<String, dynamic>>? get homeSections => _homeSections;
   String get selectedCategory => _selectedCategory;
   String get selectedSubcategory => _selectedSubcategory;
   String get searchQuery => _searchQuery;
@@ -46,12 +51,82 @@ class GroceryProvider extends ChangeNotifier {
   bool get isLoadingMore => _isLoadingMore;
 
   static const String _kCartPrefKey = 'cached_cart_items_v1';
+  static const String _kCategoriesPrefKey = 'cached_categories_list_v2';
+  static const String _kCategoryCoversPrefKey = 'cached_category_covers_v2';
+  static const String _kHomeSectionsPrefKey = 'cached_home_sections_v1';
 
   GroceryProvider({bool autoSync = true, FirestoreService? firestoreService})
       : _firestoreService = firestoreService ?? FirestoreService() {
     _loadCartFromStorage();
+    _loadCategoriesFromStorage();
     if (autoSync) {
       _initRealTimeSync();
+    }
+  }
+
+  Future<void> _loadCategoriesFromStorage() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+
+      // 1. Load cached covers map for zero-lag instant rendering
+      final coversRaw = prefs.getString(_kCategoryCoversPrefKey);
+      if (coversRaw != null && coversRaw.isNotEmpty) {
+        final List<dynamic> decodedCovers = jsonDecode(coversRaw);
+        final map = <String, Map<String, dynamic>>{};
+        for (final item in decodedCovers) {
+          if (item is Map<String, dynamic>) {
+            final target = (item['targetKey'] ?? '').toString().trim().toLowerCase();
+            if (target.isNotEmpty) map[target] = item;
+            final docId = (item['id'] ?? '').toString().trim().toLowerCase();
+            if (docId.isNotEmpty) map[docId] = item;
+          }
+        }
+        _categoryCoversMap = map;
+      }
+
+      // 2. Load cached categories list with covers & badges
+      final catsRaw = prefs.getString(_kCategoriesPrefKey);
+      if (catsRaw != null && catsRaw.isNotEmpty) {
+        final List<dynamic> decodedList = jsonDecode(catsRaw);
+        final List<CategoryModel> loadedCats = [];
+        for (final item in decodedList) {
+          if (item is Map<String, dynamic>) {
+            final id = (item['id'] ?? item['name'] ?? '').toString();
+            loadedCats.add(CategoryModel.fromMap(item, id));
+          }
+        }
+        if (loadedCats.isNotEmpty) {
+          _categoriesList = loadedCats;
+          _isLoading = false;
+          notifyListeners();
+        }
+      }
+
+      // 3. Load cached home sections layout for zero-delay home feed
+      final sectionsRaw = prefs.getString(_kHomeSectionsPrefKey);
+      if (sectionsRaw != null && sectionsRaw.isNotEmpty) {
+        final List<dynamic> decodedSecs = jsonDecode(sectionsRaw);
+        _homeSections = decodedSecs.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('Error loading categories cache from storage: $e');
+    }
+  }
+
+  Future<void> _persistCategoriesToStorage() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (_categoryCoversMap.isNotEmpty) {
+        final coversList = _categoryCoversMap.values.toList();
+        await prefs.setString(_kCategoryCoversPrefKey, jsonEncode(coversList));
+      }
+      if (_categoriesList.isNotEmpty) {
+        final catMaps = _categoriesList.map((c) => c.toMap()).toList();
+        await prefs.setString(_kCategoriesPrefKey, jsonEncode(catMaps));
+      }
+    } catch (e) {
+      debugPrint('Error persisting categories cache to storage: $e');
     }
   }
 
@@ -92,6 +167,8 @@ class GroceryProvider extends ChangeNotifier {
   void dispose() {
     _productsSub?.cancel();
     _categoriesSub?.cancel();
+    _categoryCoversSub?.cancel();
+    _homeSectionsSub?.cancel();
     super.dispose();
   }
 
@@ -113,9 +190,39 @@ class GroceryProvider extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     });
+
+    // 3. Sync Dynamic Category Covers & System Tiles from Firestore
+    _categoryCoversSub = _firestoreService.streamCategoryCovers().listen((covers) {
+      final map = <String, Map<String, dynamic>>{};
+      for (final c in covers) {
+        final target = (c['targetKey'] ?? '').toString().trim().toLowerCase();
+        if (target.isNotEmpty) {
+          map[target] = c;
+        }
+        final docId = (c['id'] ?? '').toString().trim().toLowerCase();
+        if (docId.isNotEmpty) {
+          map[docId] = c;
+        }
+      }
+      _categoryCoversMap = map;
+      _recalculateCategoryAggregations();
+      notifyListeners();
+    });
+
+    // 4. Sync Dynamic Home Layout Sections from Firestore
+    _homeSectionsSub = _firestoreService.streamHomeSections().listen((sections) async {
+      _homeSections = sections;
+      notifyListeners();
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        if (sections != null && sections.isNotEmpty) {
+          await prefs.setString(_kHomeSectionsPrefKey, jsonEncode(sections));
+        }
+      } catch (_) {}
+    });
   }
 
-  // Recalculates dynamic item counts and injects Special System Categories
+  // Recalculates dynamic item counts and injects Special System Categories with dynamic covers
   void _recalculateCategoryAggregations() {
     final Map<String, int> catCounts = {};
     int trendingCount = 0;
@@ -131,51 +238,111 @@ class GroceryProvider extends ChangeNotifier {
       }
     }
 
+    Map<String, dynamic>? findCover(String key, [String? fallbackKey]) {
+      final k1 = key.trim().toLowerCase();
+      if (_categoryCoversMap.containsKey(k1)) return _categoryCoversMap[k1];
+      if (fallbackKey != null) {
+        final k2 = fallbackKey.trim().toLowerCase();
+        if (_categoryCoversMap.containsKey(k2)) return _categoryCoversMap[k2];
+      }
+      return null;
+    }
+
     final List<CategoryModel> aggregated = [];
 
     // 1. Special System Category: All Products
-    aggregated.add(
-      CategoryModel(
-        id: 'all',
-        name: 'All Products',
-        itemCount: '${_products.length} Items',
-      ),
-    );
-
-    // 2. Special System Category: Trending Now
-    aggregated.add(
-      CategoryModel(
-        id: 'Trending',
-        name: 'Trending',
-        itemCount: '$trendingCount Items',
-      ),
-    );
-
-    // 3. Special System Category: Buy 1 Get 1 (BOGO)
-    aggregated.add(
-      CategoryModel(
-        id: 'BOGO',
-        name: 'Buy 1 Get 1',
-        itemCount: '$bogoCount Items',
-      ),
-    );
-
-    // 4. Firestore Database Categories with live counts & subcategories
-    for (final cat in _rawCategories) {
-      final count = catCounts[cat.name] ?? catCounts[cat.id] ?? 0;
+    final allCover = findCover('all');
+    final allVisible = allCover != null ? (allCover['isActive'] != false) : true;
+    if (allVisible) {
       aggregated.add(
         CategoryModel(
-          id: cat.id,
-          name: cat.name,
-          subcategories: cat.subcategories,
-          itemCount: '$count Item${count == 1 ? '' : 's'}',
-          icon: cat.icon,
-          colorHex: cat.colorHex,
+          id: 'all',
+          name: (allCover?['title'] as String?)?.trim().isNotEmpty == true
+              ? (allCover!['title'] as String).trim()
+              : 'All Products',
+          itemCount: '${_products.length} Items',
+          imageUrl: allCover?['imageUrl'] as String?,
+          tag: allCover?['tag'] as String?,
+          colorHex: allCover?['colorHex'] as String? ?? '0xFFFFF4B8',
+          order: ((allCover?['order'] ?? 0) as num).toInt(),
+          isVisible: true,
         ),
       );
     }
 
+    // 2. Special System Category: Trending Now
+    final trendCover = findCover('trending');
+    final trendVisible = trendCover != null ? (trendCover['isActive'] != false) : true;
+    if (trendVisible) {
+      aggregated.add(
+        CategoryModel(
+          id: 'Trending',
+          name: (trendCover?['title'] as String?)?.trim().isNotEmpty == true
+              ? (trendCover!['title'] as String).trim()
+              : 'Trending',
+          itemCount: '$trendingCount Items',
+          imageUrl: trendCover?['imageUrl'] as String?,
+          tag: trendCover?['tag'] as String? ?? 'HOT',
+          colorHex: trendCover?['colorHex'] as String? ?? '0xFFFFE0B2',
+          order: ((trendCover?['order'] ?? 1) as num).toInt(),
+          isVisible: true,
+        ),
+      );
+    }
+
+    // 3. Special System Category: Buy 1 Get 1 (BOGO)
+    final bogoCover = findCover('bogo');
+    final bogoVisible = bogoCover != null ? (bogoCover['isActive'] != false) : true;
+    if (bogoVisible) {
+      aggregated.add(
+        CategoryModel(
+          id: 'BOGO',
+          name: (bogoCover?['title'] as String?)?.trim().isNotEmpty == true
+              ? (bogoCover!['title'] as String).trim()
+              : 'Buy 1 Get 1',
+          itemCount: '$bogoCount Items',
+          imageUrl: bogoCover?['imageUrl'] as String?,
+          tag: bogoCover?['tag'] as String? ?? 'BOGO',
+          colorHex: bogoCover?['colorHex'] as String? ?? '0xFFE1BEE7',
+          order: ((bogoCover?['order'] ?? 2) as num).toInt(),
+          isVisible: true,
+        ),
+      );
+    }
+
+    // 4. Firestore Database Categories with live counts & subcategories & custom covers
+    int fallbackOrder = 3;
+    for (final cat in _rawCategories) {
+      final count = catCounts[cat.name] ?? catCounts[cat.id] ?? 0;
+      final cover = findCover(cat.name, cat.id);
+      final isVis = cover != null ? (cover['isActive'] != false) : cat.isVisible;
+      if (!isVis) continue;
+
+      aggregated.add(
+        CategoryModel(
+          id: cat.id,
+          name: (cover?['title'] as String?)?.trim().isNotEmpty == true
+              ? (cover!['title'] as String).trim()
+              : cat.name,
+          subcategories: cat.subcategories,
+          itemCount: '$count Item${count == 1 ? '' : 's'}',
+          icon: cat.icon,
+          colorHex: cover?['colorHex'] as String? ?? cat.colorHex,
+          imageUrl: cover?['imageUrl'] as String? ?? cat.imageUrl,
+          tag: cover?['tag'] as String? ?? cat.tag,
+          order: cover != null && cover['order'] != null
+              ? (cover['order'] as num).toInt()
+              : fallbackOrder++,
+          isVisible: true,
+        ),
+      );
+    }
+
+    // Sort by designated order
+    aggregated.sort((a, b) => a.order.compareTo(b.order));
+
     _categoriesList = aggregated;
+    _persistCategoriesToStorage();
   }
 
   // Active Category Selection

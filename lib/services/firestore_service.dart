@@ -15,7 +15,8 @@ class FirestoreService {
   static DateTime? _lastProductsFetchTime;
 
   // Fallback Categories & Products ensuring instant, flicker-free rendering
-  static List<CategoryModel> get fallbackCategories => SeedData.fallbackCategories;
+  static List<CategoryModel> get fallbackCategories =>
+      SeedData.fallbackCategories;
   static List<ProductModel> get fallbackProducts => SeedData.fallbackProducts;
 
   // 1. Real-time Stream of Categories with In-Memory Caching
@@ -248,6 +249,73 @@ class FirestoreService {
     }
   }
 
+  // 3. Real-time Stream of Mobile App Banners (Top Carousel)
+  // Returns null if collection doesn't exist yet, or list of active banners.
+  Stream<List<Map<String, dynamic>>?> streamAppBanners() {
+    return _firestore
+        .collection('app_banners')
+        .snapshots()
+        .map((snapshot) {
+          if (snapshot.docs.isEmpty) {
+            return null;
+          }
+          final items = snapshot.docs
+              .map((doc) => {'id': doc.id, ...doc.data()})
+              .where((data) => data['isActive'] != false)
+              .toList();
+          items.sort(
+            (a, b) =>
+                ((a['order'] ?? 0) as num).compareTo((b['order'] ?? 0) as num),
+          );
+          return items;
+        })
+        .handleError((error) {
+          debugPrint('Firestore App Banners stream error: $error');
+          return null;
+        });
+  }
+
+  // 4. Real-time Stream of Mobile App Category Covers / Quick Tiles
+  Stream<List<Map<String, dynamic>>> streamCategoryCovers() {
+    return _firestore
+        .collection('app_category_covers')
+        .snapshots()
+        .map((snapshot) {
+          return snapshot.docs
+              .map((doc) => {'id': doc.id, ...doc.data()})
+              .toList();
+        })
+        .handleError((error) {
+          debugPrint('Firestore Category Covers stream error: $error');
+          return <Map<String, dynamic>>[];
+        });
+  }
+
+  // 5. Real-time Stream of Mobile App Home Layout Sections
+  Stream<List<Map<String, dynamic>>?> streamHomeSections() {
+    return _firestore
+        .collection('app_home_sections')
+        .snapshots()
+        .map((snapshot) {
+          if (snapshot.docs.isEmpty) {
+            return null;
+          }
+          final items = snapshot.docs
+              .map((doc) => {'id': doc.id, ...doc.data()})
+              .where((data) => data['isActive'] != false)
+              .toList();
+          items.sort(
+            (a, b) =>
+                ((a['order'] ?? 0) as num).compareTo((b['order'] ?? 0) as num),
+          );
+          return items;
+        })
+        .handleError((error) {
+          debugPrint('Firestore Home Sections stream error: $error');
+          return null;
+        });
+  }
+
   Future<void> enqueueOrderMail(OrderModel order) async {
     try {
       if (order.customerEmail.isEmpty) return;
@@ -256,7 +324,8 @@ class FirestoreService {
         'from': '"The Grocery Hub" <ghoshabhijit1295@gmail.com>',
         'message': {
           'subject': 'Order Confirmation - ${order.orderId}',
-          'html': '<h2>Thank you for ordering with The Grocery Hub!</h2>'
+          'html':
+              '<h2>Thank you for ordering with The Grocery Hub!</h2>'
               '<p>Your order <strong>${order.orderId}</strong> has been received.</p>'
               '<p>Delivery OTP: <strong>${order.deliveryOtp}</strong></p>'
               '<p>Total Amount: ₹${order.totalAmount.toStringAsFixed(0)}</p>'

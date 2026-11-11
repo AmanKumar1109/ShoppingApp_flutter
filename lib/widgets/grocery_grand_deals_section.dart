@@ -6,20 +6,35 @@ import '../routes/app_routes.dart';
 import 'fast_cached_image.dart';
 
 class GroceryGrandDealsSection extends ConsumerWidget {
-  const GroceryGrandDealsSection({super.key});
+  final Map<String, dynamic>? config;
+
+  const GroceryGrandDealsSection({super.key, this.config});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final grocery = ref.watch(groceryProvider);
 
-    // Find a real high-value deal product from grocery provider or use fallback
-    ProductModel? featuredProduct;
-    if (grocery.products.isNotEmpty) {
-      featuredProduct = grocery.products.firstWhere(
-        (p) => p.isDeal && p.offPercentage >= 20,
-        orElse: () => grocery.products.first,
-      );
+    // Find real high-value deal products from store or fallback
+    final deals = grocery.products
+        .where((p) => p.isDeal || p.offPercentage >= 15)
+        .toList();
+    if (deals.isEmpty && grocery.products.isNotEmpty) {
+      deals.addAll(grocery.products.take(6));
     }
+
+    final ProductModel? featuredProduct =
+        deals.isNotEmpty ? deals.first : (grocery.products.isNotEmpty ? grocery.products.first : null);
+    final ProductModel? dealProduct1 = deals.length > 1 ? deals[1] : null;
+    final ProductModel? dealProduct2 = deals.length > 2 ? deals[2] : null;
+    final ProductModel? dealProduct3 = deals.length > 3 ? deals[3] : null;
+
+    final word1 = config?['headerWord1'] as String? ?? 'THE ';
+    final word2 = config?['headerWord2'] as String? ?? 'Grocery';
+    final word3 = config?['headerWord3'] as String? ?? ' DEALS';
+
+    final featMap = config?['featuredCard'] as Map<String, dynamic>?;
+    final gridItems = config?['gridItems'] as List<dynamic>?;
+    final bottomPills = config?['bottomPills'] as List<dynamic>?;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -51,9 +66,9 @@ class GroceryGrandDealsSection extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.baseline,
                 textBaseline: TextBaseline.alphabetic,
                 children: [
-                  const Text(
-                    'THE ',
-                    style: TextStyle(
+                  Text(
+                    word1,
+                    style: const TextStyle(
                       fontFamily: 'serif',
                       fontSize: 16,
                       fontWeight: FontWeight.w800,
@@ -62,7 +77,7 @@ class GroceryGrandDealsSection extends ConsumerWidget {
                     ),
                   ),
                   Text(
-                    'Grocery',
+                    word2,
                     style: TextStyle(
                       fontFamily: 'serif',
                       fontStyle: FontStyle.italic,
@@ -80,9 +95,9 @@ class GroceryGrandDealsSection extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(width: 4),
-                  const Text(
-                    ' DEALS',
-                    style: TextStyle(
+                  Text(
+                    word3,
+                    style: const TextStyle(
                       fontFamily: 'serif',
                       fontSize: 16,
                       fontWeight: FontWeight.w800,
@@ -108,6 +123,7 @@ class GroceryGrandDealsSection extends ConsumerWidget {
                     child: _buildTallFeaturedCard(
                       context,
                       featuredProduct,
+                      featMap,
                     ),
                   ),
 
@@ -118,31 +134,41 @@ class GroceryGrandDealsSection extends ConsumerWidget {
                     flex: 58,
                     child: Column(
                       children: [
-                        // Row 1: Dry Fruits & Oils/Ghee
+                        // Row 1: Item 0 & Item 1
                         Expanded(
                           child: Row(
                             children: [
                               Expanded(
                                 child: _buildSmallDealCard(
                                   context: context,
-                                  discountTag: 'Up to 50% OFF',
-                                  title: 'Dry Fruits\n& Nuts',
-                                  imageUrl:
-                                      'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400&auto=format&fit=crop',
-                                  targetCategory: 'cat_snacks_munchies',
-                                  targetTitle: 'Dry Fruits & Nuts',
+                                  itemData: gridItems != null && gridItems.isNotEmpty
+                                      ? gridItems[0] as Map<String, dynamic>?
+                                      : null,
+                                  defaultTag: dealProduct1 != null && dealProduct1.offPercentage > 0
+                                      ? '${dealProduct1.offPercentage}% OFF'
+                                      : 'Up to 50% OFF',
+                                  defaultTitle: dealProduct1?.title ?? 'Dry Fruits\n& Nuts',
+                                  defaultImage: dealProduct1 != null && dealProduct1.imageUrl.isNotEmpty
+                                      ? dealProduct1.imageUrl
+                                      : 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400&auto=format&fit=crop',
+                                  defaultCategory: dealProduct1?.category ?? 'cat_snacks_munchies',
                                 ),
                               ),
                               const SizedBox(width: 8),
                               Expanded(
                                 child: _buildSmallDealCard(
                                   context: context,
-                                  discountTag: 'Up to 45% OFF',
-                                  title: 'Oils, Ghee\n& Spices',
-                                  imageUrl:
-                                      'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400&auto=format&fit=crop',
-                                  targetCategory: 'cat_oil_masala',
-                                  targetTitle: 'Oil, Ghee & Masala',
+                                  itemData: gridItems != null && gridItems.length > 1
+                                      ? gridItems[1] as Map<String, dynamic>?
+                                      : null,
+                                  defaultTag: dealProduct2 != null && dealProduct2.offPercentage > 0
+                                      ? '${dealProduct2.offPercentage}% OFF'
+                                      : 'Up to 45% OFF',
+                                  defaultTitle: dealProduct2?.title ?? 'Oils, Ghee\n& Spices',
+                                  defaultImage: dealProduct2 != null && dealProduct2.imageUrl.isNotEmpty
+                                      ? dealProduct2.imageUrl
+                                      : 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400&auto=format&fit=crop',
+                                  defaultCategory: dealProduct2?.category ?? 'cat_oil_masala',
                                 ),
                               ),
                             ],
@@ -150,24 +176,34 @@ class GroceryGrandDealsSection extends ConsumerWidget {
                         ),
                         const SizedBox(height: 8),
 
-                        // Row 2: Breakfast Cereals & Best Brand Offers
+                        // Row 2: Item 2 & Item 3 (Brand Offers)
                         Expanded(
                           child: Row(
                             children: [
                               Expanded(
                                 child: _buildSmallDealCard(
                                   context: context,
-                                  discountTag: 'Up to 40% OFF',
-                                  title: 'Breakfast\n& Cereals',
-                                  imageUrl:
-                                      'https://images.unsplash.com/photo-1527515637462-cff94eecc1ac?w=400&auto=format&fit=crop',
-                                  targetCategory: 'cat_snacks_munchies',
-                                  targetTitle: 'Breakfast & Cereals',
+                                  itemData: gridItems != null && gridItems.length > 2
+                                      ? gridItems[2] as Map<String, dynamic>?
+                                      : null,
+                                  defaultTag: dealProduct3 != null && dealProduct3.offPercentage > 0
+                                      ? '${dealProduct3.offPercentage}% OFF'
+                                      : 'Up to 40% OFF',
+                                  defaultTitle: dealProduct3?.title ?? 'Breakfast\n& Cereals',
+                                  defaultImage: dealProduct3 != null && dealProduct3.imageUrl.isNotEmpty
+                                      ? dealProduct3.imageUrl
+                                      : 'https://images.unsplash.com/photo-1527515637462-cff94eecc1ac?w=400&auto=format&fit=crop',
+                                  defaultCategory: dealProduct3?.category ?? 'cat_snacks_munchies',
                                 ),
                               ),
                               const SizedBox(width: 8),
                               Expanded(
-                                child: _buildBestBrandOffersCard(context),
+                                child: _buildBestBrandOffersCard(
+                                  context,
+                                  itemData: gridItems != null && gridItems.length > 3
+                                      ? gridItems[3] as Map<String, dynamic>?
+                                      : null,
+                                ),
                               ),
                             ],
                           ),
@@ -187,53 +223,27 @@ class GroceryGrandDealsSection extends ConsumerWidget {
                 Expanded(
                   child: _buildBottomDealPill(
                     context: context,
-                    leadingWidget: Container(
-                      width: 32,
-                      height: 32,
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                      ),
-                      child: ClipOval(
-                        child: FastCachedImage(
-                          imageUrl:
-                              'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=200&auto=format&fit=crop',
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    ),
-                    title: 'BUY 2 AT ₹299',
-                    subtitle: 'on Dry Fruits & Snacks',
-                    targetTitle: 'Buy 2 Specials',
-                    sectionType: 'trending',
+                    pillData: bottomPills != null && bottomPills.isNotEmpty
+                        ? bottomPills[0] as Map<String, dynamic>?
+                        : null,
+                    defaultTitle: 'BUY 2 AT ₹299',
+                    defaultSubtitle: 'on Dry Fruits & Snacks',
+                    defaultImage:
+                        'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=200&auto=format&fit=crop',
+                    defaultSectionType: 'trending',
                   ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: _buildBottomDealPill(
                     context: context,
-                    leadingWidget: Container(
-                      width: 32,
-                      height: 32,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.25),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Center(
-                        child: Text(
-                          '%',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
-                      ),
-                    ),
-                    title: 'Min 40% OFF',
-                    subtitle: 'on Gourmet Essentials',
-                    targetTitle: 'Gourmet Essentials',
-                    sectionType: 'deals',
+                    pillData: bottomPills != null && bottomPills.length > 1
+                        ? bottomPills[1] as Map<String, dynamic>?
+                        : null,
+                    defaultTitle: 'Min 40% OFF',
+                    defaultSubtitle: 'on Gourmet Essentials',
+                    defaultImage: '',
+                    defaultSectionType: 'deals',
                   ),
                 ),
               ],
@@ -248,17 +258,26 @@ class GroceryGrandDealsSection extends ConsumerWidget {
   Widget _buildTallFeaturedCard(
     BuildContext context,
     ProductModel? product,
+    Map<String, dynamic>? featMap,
   ) {
     const defaultImg =
         'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=500&auto=format&fit=crop';
-    final title = product?.title ?? 'Royal Basmati Rice & Ghee';
-    final price = product?.price ?? 549.0;
-    final mrp = product?.mrp ?? 899.0;
-    final imageUrl = product?.imageUrl ?? defaultImg;
+    final title = featMap?['title'] ?? (product?.title ?? 'Royal Basmati Rice & Ghee');
+    final price = (featMap != null && featMap['price'] != null)
+        ? ((featMap['price'] as num).toDouble())
+        : (product?.price ?? 549.0);
+    final mrp = (featMap != null && featMap['mrp'] != null)
+        ? ((featMap['mrp'] as num).toDouble())
+        : (product?.mrp ?? 899.0);
+    final imageUrl = (featMap?['imageUrl'] as String?)?.trim().isNotEmpty == true
+        ? (featMap!['imageUrl'] as String).trim()
+        : (product?.imageUrl ?? defaultImg);
+    final badge = featMap?['badge'] ?? 'TOP\nDEALS';
+    final targetCat = featMap?['targetCategory'] ?? 'deals';
 
     return InkWell(
       onTap: () {
-        if (product != null) {
+        if (product != null && featMap == null) {
           AppRoutes.navigateToProduct(
             context,
             product,
@@ -269,8 +288,9 @@ class GroceryGrandDealsSection extends ConsumerWidget {
             context,
             AppRoutes.catalog,
             arguments: {
-              'title': 'Top Grocery Deals',
+              'title': title,
               'sectionType': 'deals',
+              'categoryName': targetCat,
             },
           );
         }
@@ -290,10 +310,10 @@ class GroceryGrandDealsSection extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             // "TOP DEALS" Heading Badge
-            const Text(
-              'TOP\nDEALS',
+            Text(
+              badge,
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: const TextStyle(
                 fontFamily: 'serif',
                 color: Color(0xFF7A1832),
                 fontSize: 13.5,
@@ -385,12 +405,26 @@ class GroceryGrandDealsSection extends ConsumerWidget {
   // --- SMALL 2x2 DEAL CARD ---
   Widget _buildSmallDealCard({
     required BuildContext context,
-    required String discountTag,
-    required String title,
-    required String imageUrl,
-    required String targetCategory,
-    required String targetTitle,
+    Map<String, dynamic>? itemData,
+    required String defaultTag,
+    required String defaultTitle,
+    required String defaultImage,
+    required String defaultCategory,
   }) {
+    final discountTag = (itemData?['discountTag'] as String?)?.trim().isNotEmpty == true
+        ? itemData!['discountTag'] as String
+        : defaultTag;
+    final title = (itemData?['title'] as String?)?.trim().isNotEmpty == true
+        ? itemData!['title'] as String
+        : defaultTitle;
+    final imageUrl = (itemData?['imageUrl'] as String?)?.trim().isNotEmpty == true
+        ? itemData!['imageUrl'] as String
+        : defaultImage;
+    final targetCategory = (itemData?['targetCategory'] as String?)?.trim().isNotEmpty == true
+        ? itemData!['targetCategory'] as String
+        : defaultCategory;
+    final targetTitle = itemData?['targetTitle'] ?? title.replaceAll('\n', ' ');
+
     return InkWell(
       onTap: () {
         Navigator.pushNamed(
@@ -474,7 +508,14 @@ class GroceryGrandDealsSection extends ConsumerWidget {
   }
 
   // --- BEST BRAND OFFERS CARD ---
-  Widget _buildBestBrandOffersCard(BuildContext context) {
+  Widget _buildBestBrandOffersCard(
+    BuildContext context, {
+    Map<String, dynamic>? itemData,
+  }) {
+    final title = itemData?['title'] ?? 'BEST BRAND\nOFFERS';
+    final subtitle = itemData?['subtitle'] ?? 'Explore Top Brands';
+    final targetCategory = itemData?['targetCategory'] ?? 'all';
+
     return InkWell(
       onTap: () {
         Navigator.pushNamed(
@@ -483,6 +524,7 @@ class GroceryGrandDealsSection extends ConsumerWidget {
           arguments: {
             'title': 'Best Brand Offers',
             'sectionType': 'deals',
+            'categoryName': targetCategory,
           },
         );
       },
@@ -501,10 +543,10 @@ class GroceryGrandDealsSection extends ConsumerWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Text(
-                'BEST BRAND',
+              Text(
+                title,
                 textAlign: TextAlign.center,
-                style: TextStyle(
+                style: const TextStyle(
                   fontFamily: 'serif',
                   fontSize: 10.5,
                   fontWeight: FontWeight.w800,
@@ -513,15 +555,15 @@ class GroceryGrandDealsSection extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 2),
-              const Text(
-                'OFFERS',
+              Text(
+                subtitle,
                 textAlign: TextAlign.center,
-                style: TextStyle(
+                style: const TextStyle(
                   fontFamily: 'serif',
-                  fontSize: 15,
-                  fontWeight: FontWeight.w900,
+                  fontSize: 8.5,
+                  fontWeight: FontWeight.w700,
                   color: Color(0xFF7A1832),
-                  letterSpacing: 1.2,
+                  letterSpacing: 0.5,
                 ),
               ),
               const SizedBox(height: 4),
@@ -540,12 +582,24 @@ class GroceryGrandDealsSection extends ConsumerWidget {
   // --- BOTTOM HORIZONTAL DEAL PILL ---
   Widget _buildBottomDealPill({
     required BuildContext context,
-    required Widget leadingWidget,
-    required String title,
-    required String subtitle,
-    required String targetTitle,
-    required String sectionType,
+    Map<String, dynamic>? pillData,
+    required String defaultTitle,
+    required String defaultSubtitle,
+    required String defaultImage,
+    required String defaultSectionType,
   }) {
+    final title = (pillData?['title'] as String?)?.trim().isNotEmpty == true
+        ? pillData!['title'] as String
+        : defaultTitle;
+    final subtitle = (pillData?['subtitle'] as String?)?.trim().isNotEmpty == true
+        ? pillData!['subtitle'] as String
+        : defaultSubtitle;
+    final imageUrl = (pillData?['imageUrl'] as String?)?.trim().isNotEmpty == true
+        ? pillData!['imageUrl'] as String
+        : defaultImage;
+    final sectionType = pillData?['sectionType'] ?? defaultSectionType;
+    final targetTitle = pillData?['targetTitle'] ?? title;
+
     return InkWell(
       onTap: () {
         Navigator.pushNamed(
@@ -573,7 +627,40 @@ class GroceryGrandDealsSection extends ConsumerWidget {
         ),
         child: Row(
           children: [
-            leadingWidget,
+            if (imageUrl.isNotEmpty)
+              Container(
+                width: 32,
+                height: 32,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                ),
+                child: ClipOval(
+                  child: FastCachedImage(
+                    imageUrl: imageUrl,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              )
+            else
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.25),
+                  shape: BoxShape.circle,
+                ),
+                child: const Center(
+                  child: Text(
+                    '%',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+              ),
             const SizedBox(width: 8),
             Expanded(
               child: Column(

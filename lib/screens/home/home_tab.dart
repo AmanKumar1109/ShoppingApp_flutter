@@ -135,9 +135,10 @@ class HomeTab extends ConsumerWidget {
 
                 // Horizontal Category Showcase Slider
                 SizedBox(
-                  height: 104,
+                  height: 106,
                   child: ListView.builder(
                     scrollDirection: Axis.horizontal,
+                    clipBehavior: Clip.none,
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     itemCount: grocery.categories.length,
                     itemBuilder: (context, index) {
@@ -156,40 +157,99 @@ class HomeTab extends ConsumerWidget {
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              AnimatedContainer(
-                                duration: const Duration(milliseconds: 200),
-                                width: 56,
-                                height: 56,
-                                decoration: BoxDecoration(
-                                  color: isSelected
-                                      ? const Color(0xFFF7C415)
-                                      : Colors.white,
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: isSelected
-                                        ? const Color(0xFF19251B)
-                                        : Colors.transparent,
-                                    width: isSelected ? 2 : 0,
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withValues(
-                                        alpha: isSelected ? 0.15 : 0.05,
+                              Stack(
+                                clipBehavior: Clip.none,
+                                alignment: Alignment.center,
+                                children: [
+                                  AnimatedContainer(
+                                    duration: const Duration(milliseconds: 200),
+                                    width: 56,
+                                    height: 56,
+                                    decoration: BoxDecoration(
+                                      color: isSelected
+                                          ? const Color(0xFFF7C415)
+                                          : Colors.white,
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: isSelected
+                                            ? const Color(0xFF19251B)
+                                            : Colors.grey.shade200,
+                                        width: isSelected ? 2.5 : 1,
                                       ),
-                                      blurRadius: isSelected ? 8 : 4,
-                                      offset: const Offset(0, 3),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withValues(
+                                            alpha: isSelected ? 0.15 : 0.05,
+                                          ),
+                                          blurRadius: isSelected ? 8 : 4,
+                                          offset: const Offset(0, 3),
+                                        ),
+                                      ],
                                     ),
-                                  ],
-                                ),
-                                child: Center(
-                                  child: Icon(
-                                    category.iconData,
-                                    size: 26,
-                                    color: isSelected
-                                        ? const Color(0xFF19251B)
-                                        : const Color(0xFF3B4D3F),
+                                    child: ClipOval(
+                                      child: category.imageUrl != null &&
+                                              category.imageUrl!.trim().isNotEmpty
+                                          ? FastCachedImage(
+                                              imageUrl: category.imageUrl!.trim(),
+                                              width: 56,
+                                              height: 56,
+                                              fit: BoxFit.cover,
+                                              errorWidget: Icon(
+                                                category.iconData,
+                                                size: 26,
+                                                color: isSelected
+                                                    ? const Color(0xFF19251B)
+                                                    : const Color(0xFF3B4D3F),
+                                              ),
+                                            )
+                                          : Center(
+                                              child: Icon(
+                                                category.iconData,
+                                                size: 26,
+                                                color: isSelected
+                                                    ? const Color(0xFF19251B)
+                                                    : const Color(0xFF3B4D3F),
+                                              ),
+                                            ),
+                                    ),
                                   ),
-                                ),
+                                  if (category.tag != null &&
+                                      category.tag!.trim().isNotEmpty)
+                                    Positioned(
+                                      top: -3,
+                                      right: -3,
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 5,
+                                          vertical: 1.5,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: isSelected
+                                              ? const Color(0xFF19251B)
+                                              : const Color(0xFFE53935),
+                                          borderRadius: BorderRadius.circular(8),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.black.withValues(
+                                                alpha: 0.15,
+                                              ),
+                                              blurRadius: 3,
+                                              offset: const Offset(0, 1),
+                                            ),
+                                          ],
+                                        ),
+                                        child: Text(
+                                          category.tag!.toUpperCase(),
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 7.5,
+                                            fontWeight: FontWeight.w900,
+                                            letterSpacing: 0.3,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                ],
                               ),
                               const SizedBox(height: 5),
                               Text(
@@ -431,8 +491,20 @@ class HomeTab extends ConsumerWidget {
             ),
             const SizedBox(height: 30),
           ] else ...[
-            // 1. TOP PROMOTIONAL AD BANNER CAROUSEL (Cadbury Brownie, Surf Excel, etc.)
-            const PromoAdBannerCarousel(),
+            if (grocery.homeSections != null &&
+                grocery.homeSections!.isNotEmpty) ...[
+              for (int i = 0; i < grocery.homeSections!.length; i++)
+                _buildDynamicHomeSection(
+                  context,
+                  ref,
+                  grocery,
+                  grocery.homeSections![i],
+                  i,
+                ),
+              const SizedBox(height: 30),
+            ] else ...[
+              // 1. TOP PROMOTIONAL AD BANNER CAROUSEL (Cadbury Brownie, Surf Excel, etc.)
+              const PromoAdBannerCarousel(),
 
             const SizedBox(height: 24),
 
@@ -852,10 +924,332 @@ class HomeTab extends ConsumerWidget {
             ],
 
             const SizedBox(height: 30),
+            ],
           ],
         ],
       ),
     );
+  }
+
+  Widget _buildDynamicHomeSection(
+    BuildContext context,
+    WidgetRef ref,
+    GroceryProvider grocery,
+    Map<String, dynamic> section,
+    int index,
+  ) {
+    final type = (section['type'] ?? '').toString();
+
+    if (type == 'top_carousel') {
+      return const Padding(
+        padding: EdgeInsets.only(bottom: 24),
+        child: PromoAdBannerCarousel(),
+      );
+    } else if (type == 'special_deals') {
+      if (grocery.specialDeals.isEmpty) return const SizedBox.shrink();
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildSectionHeader(
+            title: section['title'] ?? 'Today Special Deals',
+            onSeeAll: () {
+              Navigator.pushNamed(
+                context,
+                AppRoutes.catalog,
+                arguments: {
+                  'title': section['title'] ?? 'Today Special Deals',
+                  'sectionType': 'deals',
+                },
+              );
+            },
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 268,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              itemCount: grocery.specialDeals.length,
+              itemBuilder: (context, idx) {
+                final product = grocery.specialDeals[idx];
+                final heroTag = 'hero_home_deals_${product.id}_${index}_$idx';
+                return Container(
+                  width: 168,
+                  margin: const EdgeInsets.only(right: 14),
+                  child: _buildProductCard(
+                    context,
+                    ref,
+                    product,
+                    heroTag: heroTag,
+                  ),
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 24),
+        ],
+      );
+    } else if (type == 'grand_deals') {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 28),
+        child: GroceryGrandDealsSection(config: section),
+      );
+    } else if (type == 'trending_area') {
+      if (grocery.trendingProducts.isEmpty) return const SizedBox.shrink();
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildSectionHeader(
+            title: section['title'] ?? 'Trending in Your Area',
+            onSeeAll: () {
+              Navigator.pushNamed(
+                context,
+                AppRoutes.catalog,
+                arguments: {
+                  'title': section['title'] ?? 'Trending in Your Area',
+                  'sectionType': 'trending',
+                },
+              );
+            },
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 268,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              itemCount: grocery.trendingProducts.length,
+              itemBuilder: (context, idx) {
+                final product = grocery.trendingProducts[idx];
+                final heroTag = 'hero_home_trending_${product.id}_${index}_$idx';
+                return Container(
+                  width: 168,
+                  margin: const EdgeInsets.only(right: 14),
+                  child: _buildProductCard(
+                    context,
+                    ref,
+                    product,
+                    heroTag: heroTag,
+                  ),
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 28),
+        ],
+      );
+    } else if (type == 'category_products') {
+      final targetCat = (section['targetCategory'] ?? section['title'] ?? '')
+          .toString()
+          .trim()
+          .toLowerCase();
+      final catProducts = grocery.products.where((p) {
+        final c = p.category.trim().toLowerCase();
+        return c == targetCat || c.contains(targetCat) || targetCat.contains(c);
+      }).toList();
+
+      if (catProducts.isEmpty) return const SizedBox.shrink();
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildSectionHeader(
+            title: section['title'] ?? targetCat,
+            onSeeAll: () {
+              Navigator.pushNamed(
+                context,
+                AppRoutes.catalog,
+                arguments: {
+                  'title': section['title'] ?? targetCat,
+                  'sectionType': 'category',
+                  'categoryId':
+                      section['categoryId'] ?? section['targetCategory'],
+                  'categoryName': section['targetCategory'] ?? section['title'],
+                },
+              );
+            },
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 268,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              itemCount: catProducts.length,
+              itemBuilder: (context, idx) {
+                final product = catProducts[idx];
+                final heroTag = 'hero_home_cat_${product.id}_${index}_$idx';
+                return Container(
+                  width: 168,
+                  margin: const EdgeInsets.only(right: 14),
+                  child: _buildProductCard(
+                    context,
+                    ref,
+                    product,
+                    heroTag: heroTag,
+                  ),
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 24),
+        ],
+      );
+    } else if (type == 'promo_banner') {
+      final gradientColors = _parseBannerColors(section['gradientColors']);
+      final imageUrl = (section['imageUrl'] ?? '').toString().trim();
+      final badge = (section['badge'] ?? '').toString().trim();
+      final title = (section['title'] ?? '').toString().trim();
+      final subtitle = (section['subtitle'] ?? '').toString().trim();
+      final buttonText =
+          (section['buttonText'] ?? 'Shop Now').toString().trim();
+      final targetCat = (section['targetCategory'] ?? '').toString().trim();
+
+      return Padding(
+        padding: const EdgeInsets.only(left: 20, right: 20, bottom: 24),
+        child: Container(
+          width: double.infinity,
+          height: 170,
+          clipBehavior: Clip.antiAlias,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(24),
+            gradient: LinearGradient(
+              colors: gradientColors,
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.08),
+                blurRadius: 16,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: Stack(
+            children: [
+              if (imageUrl.isNotEmpty)
+                Positioned(
+                  right: 8,
+                  top: 12,
+                  bottom: 12,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(18),
+                    child: FastCachedImage(
+                      imageUrl: imageUrl,
+                      width: 140,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 14,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    if (badge.isNotEmpty) ...[
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF19251B),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          badge,
+                          style: const TextStyle(
+                            color: Color(0xFFF7C415),
+                            fontSize: 9.5,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 5),
+                    ],
+                    Text(
+                      title.isNotEmpty ? title : 'Special Offer',
+                      style: const TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w900,
+                        color: Color(0xFF19251B),
+                      ),
+                    ),
+                    if (subtitle.isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF4B5563),
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 8),
+                    CustomPillButton(
+                      text: buttonText,
+                      onPressed: () {
+                        Navigator.pushNamed(
+                          context,
+                          AppRoutes.catalog,
+                          arguments: {
+                            'title': title.isNotEmpty ? title : 'Special Deals',
+                            'sectionType':
+                                targetCat.isNotEmpty ? 'category' : 'deals',
+                            'categoryId': section['categoryId'] ?? targetCat,
+                            'categoryName': targetCat,
+                          },
+                        );
+                      },
+                      backgroundColor: const Color(0xFF19251B),
+                      textColor: const Color(0xFFF7C415),
+                      fontSize: 11.5,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 6,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return const SizedBox.shrink();
+  }
+
+  List<Color> _parseBannerColors(dynamic val) {
+    if (val is List && val.isNotEmpty) {
+      final colors = <Color>[];
+      for (final c in val) {
+        if (c is int) {
+          colors.add(Color(c));
+        } else if (c is String) {
+          final clean = c.replaceAll('#', '').trim();
+          if (clean.length == 6) {
+            colors.add(Color(int.parse('0xFF$clean')));
+          } else if (clean.length == 8) {
+            colors.add(Color(int.parse('0x$clean')));
+          }
+        }
+      }
+      if (colors.length >= 2) return colors;
+    }
+    return const [
+      Color(0xFFFFF3E0),
+      Color(0xFFFFE0B2),
+      Color(0xFFFFCC80),
+    ];
   }
 
   Widget _buildSectionHeader({

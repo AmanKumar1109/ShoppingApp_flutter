@@ -36,7 +36,22 @@ service cloud.firestore {
     // 4. Banners & Promotional content
     match /banners/{bannerId} {
       allow read: if true;
-      allow write: if false;
+      allow write: if isAuthenticated();
+    }
+
+    match /app_banners/{bannerId} {
+      allow read: if true;
+      allow write: if isAuthenticated();
+    }
+
+    match /app_category_covers/{coverId} {
+      allow read: if true;
+      allow write: if isAuthenticated();
+    }
+
+    match /app_home_sections/{sectionId} {
+      allow read: if true;
+      allow write: if isAuthenticated();
     }
 
     // 5. Orders: User can only read and create their own orders.

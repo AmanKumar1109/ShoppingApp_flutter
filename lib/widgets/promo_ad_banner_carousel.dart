@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../routes/app_routes.dart';
+import '../services/firestore_service.dart';
 import 'fast_cached_image.dart';
 
 class PromoAdBannerItem {
@@ -27,6 +28,60 @@ class PromoAdBannerItem {
     this.categoryId,
     this.searchTerm,
   });
+
+  factory PromoAdBannerItem.fromMap(Map<String, dynamic> data) {
+    List<Color> parseGradient(dynamic val) {
+      if (val is List && val.isNotEmpty) {
+        final colors = <Color>[];
+        for (final c in val) {
+          if (c is int) {
+            colors.add(Color(c));
+          } else if (c is String) {
+            final clean = c.replaceAll('#', '').trim();
+            final intVal = int.tryParse(
+              clean.length == 6 ? 'FF$clean' : clean,
+              radix: 16,
+            );
+            if (intVal != null) {
+              colors.add(Color(intVal));
+            }
+          }
+        }
+        if (colors.length >= 2) return colors;
+      }
+      return const [
+        Color(0xFF1E3A8A),
+        Color(0xFF1D4ED8),
+        Color(0xFF0F172A),
+      ];
+    }
+
+    Color parseAccent(dynamic val) {
+      if (val is int) return Color(val);
+      if (val is String) {
+        final clean = val.replaceAll('#', '').trim();
+        final intVal = int.tryParse(
+          clean.length == 6 ? 'FF$clean' : clean,
+          radix: 16,
+        );
+        if (intVal != null) return Color(intVal);
+      }
+      return const Color(0xFF3B82F6);
+    }
+
+    return PromoAdBannerItem(
+      title: (data['title'] ?? '').toString(),
+      subtitle: (data['subtitle'] ?? '').toString(),
+      buttonText: (data['buttonText'] ?? 'Shop now').toString(),
+      imageUrl: (data['imageUrl'] ?? '').toString(),
+      gradientColors: parseGradient(data['gradientColors']),
+      accentColor: parseAccent(data['accentColor']),
+      targetTitle: (data['targetTitle'] ?? 'Products').toString(),
+      sectionType: (data['sectionType'] ?? 'all').toString(),
+      categoryId: data['categoryId']?.toString(),
+      searchTerm: data['searchTerm']?.toString(),
+    );
+  }
 }
 
 class PromoAdBannerCarousel extends StatefulWidget {
@@ -43,9 +98,11 @@ class _PromoAdBannerCarouselState extends State<PromoAdBannerCarousel> {
 
   int _currentBannerIndex = 0;
   Timer? _autoScrollTimer;
+  StreamSubscription? _bannerSubscription;
   bool _isUserInteracting = false;
+  late List<PromoAdBannerItem> _banners;
 
-  static const List<PromoAdBannerItem> _banners = [
+  static const List<PromoAdBannerItem> _defaultBanners = [
     PromoAdBannerItem(
       title: 'Surf Excel\nMatic Liquid',
       subtitle: 'Tough stain removal in 1 wash',
@@ -135,12 +192,32 @@ class _PromoAdBannerCarouselState extends State<PromoAdBannerCarousel> {
   @override
   void initState() {
     super.initState();
+    _banners = List.from(_defaultBanners);
     _initialVirtualPage = (_kLoopFactor ~/ 2) * _banners.length;
     _pageController = PageController(
       viewportFraction: 0.90,
       initialPage: _initialVirtualPage,
     );
     _startAutoScroll();
+
+    _bannerSubscription =
+        FirestoreService().streamAppBanners().listen((rawList) {
+      if (!mounted) return;
+      if (rawList == null) {
+        // Firestore collection not created yet, keep default banners
+        return;
+      }
+      final parsed =
+          rawList.map((m) => PromoAdBannerItem.fromMap(m)).toList();
+      setState(() {
+        _banners = parsed;
+        if (_banners.isNotEmpty) {
+          _currentBannerIndex = _currentBannerIndex % _banners.length;
+        } else {
+          _currentBannerIndex = 0;
+        }
+      });
+    });
   }
 
   void _startAutoScroll() {
@@ -182,6 +259,7 @@ class _PromoAdBannerCarouselState extends State<PromoAdBannerCarousel> {
 
   @override
   void dispose() {
+    _bannerSubscription?.cancel();
     _autoScrollTimer?.cancel();
     _pageController.dispose();
     super.dispose();
@@ -189,6 +267,10 @@ class _PromoAdBannerCarouselState extends State<PromoAdBannerCarousel> {
 
   @override
   Widget build(BuildContext context) {
+    if (_banners.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [

@@ -7,6 +7,10 @@ class CategoryModel {
   final String itemCount;
   final String? icon;
   final String colorHex;
+  final String? imageUrl;
+  final String? tag;
+  final int order;
+  final bool isVisible;
 
   CategoryModel({
     required this.id,
@@ -15,6 +19,10 @@ class CategoryModel {
     this.itemCount = '0 Items',
     this.icon,
     this.colorHex = '0xFFFFF4B8',
+    this.imageUrl,
+    this.tag,
+    this.order = 0,
+    this.isVisible = true,
   });
 
   factory CategoryModel.fromMap(Map<String, dynamic> map, String id, {int count = 0}) {
@@ -22,23 +30,62 @@ class CategoryModel {
             ?.map((e) => e.toString())
             .toList() ??
         [];
+    final resolvedCountStr = (map['itemCount'] != null && (map['itemCount'] as String).isNotEmpty)
+        ? map['itemCount'] as String
+        : '$count Item${count == 1 ? '' : 's'}';
     return CategoryModel(
-      id: id,
-      name: map['name'] ?? id,
+      id: map['id'] ?? id,
+      name: map['name'] ?? map['title'] ?? id,
       subcategories: subcats,
-      itemCount: '$count Item${count == 1 ? '' : 's'}',
+      itemCount: resolvedCountStr,
       icon: map['icon'],
       colorHex: map['colorHex'] ?? '0xFFFFF4B8',
+      imageUrl: map['imageUrl'] ?? map['coverImage'] ?? map['image'],
+      tag: map['tag'],
+      order: (map['order'] is num) ? (map['order'] as num).toInt() : 0,
+      isVisible: map['isActive'] ?? map['isVisible'] ?? true,
     );
   }
 
   Map<String, dynamic> toMap() {
     return {
+      'id': id,
       'name': name,
       'subcategories': subcategories,
+      'itemCount': itemCount,
       'icon': icon,
       'colorHex': colorHex,
+      'imageUrl': imageUrl,
+      'tag': tag,
+      'order': order,
+      'isActive': isVisible,
     };
+  }
+
+  CategoryModel copyWith({
+    String? id,
+    String? name,
+    List<String>? subcategories,
+    String? itemCount,
+    String? icon,
+    String? colorHex,
+    String? imageUrl,
+    String? tag,
+    int? order,
+    bool? isVisible,
+  }) {
+    return CategoryModel(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      subcategories: subcategories ?? this.subcategories,
+      itemCount: itemCount ?? this.itemCount,
+      icon: icon ?? this.icon,
+      colorHex: colorHex ?? this.colorHex,
+      imageUrl: imageUrl ?? this.imageUrl,
+      tag: tag ?? this.tag,
+      order: order ?? this.order,
+      isVisible: isVisible ?? this.isVisible,
+    );
   }
 
   // Icon auto-detection helper based on category name keyword (matching CATEGORIES_FETCH_AND_SHOW_ARCHITECTURE.md)
