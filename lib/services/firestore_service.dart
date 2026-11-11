@@ -316,6 +316,19 @@ class FirestoreService {
         });
   }
 
+  // 7. Real-time Stream of Store & App Global Settings (Order Acceptance, Pause State, etc.)
+  Stream<Map<String, dynamic>> streamGlobalSettings() {
+    return _firestore
+        .collection('settings')
+        .doc('global')
+        .snapshots()
+        .map((snap) => snap.data() ?? <String, dynamic>{})
+        .handleError((error) {
+          debugPrint('Firestore Global Settings stream error: $error');
+          return <String, dynamic>{};
+        });
+  }
+
   Future<void> enqueueOrderMail(OrderModel order) async {
     try {
       if (order.customerEmail.isEmpty) return;

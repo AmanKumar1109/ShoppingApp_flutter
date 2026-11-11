@@ -635,6 +635,18 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     final grocery = ref.read(groceryProvider);
     final user = auth.user;
 
+    // 0. Validate App Accepting Orders
+    if (!grocery.isAppAcceptingOrders) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(grocery.orderPauseMessage),
+          backgroundColor: const Color(0xFFDC2626),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
     // 1. Validate Login
     if (user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -2412,10 +2424,26 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
               child: SizedBox(
                 height: 48,
                 child: ElevatedButton(
-                  onPressed: _isProcessing ? null : _processCheckout,
+                  onPressed: _isProcessing
+                      ? null
+                      : (!grocery.isAppAcceptingOrders
+                          ? () {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(grocery.orderPauseMessage),
+                                  backgroundColor: const Color(0xFFDC2626),
+                                  behavior: SnackBarBehavior.floating,
+                                ),
+                              );
+                            }
+                          : _processCheckout),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF19251B),
-                    foregroundColor: const Color(0xFFF7C415),
+                    backgroundColor: grocery.isAppAcceptingOrders
+                        ? const Color(0xFF19251B)
+                        : const Color(0xFFE5E7EB),
+                    foregroundColor: grocery.isAppAcceptingOrders
+                        ? const Color(0xFFF7C415)
+                        : const Color(0xFF9CA3AF),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -2434,9 +2462,11 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
-                              _selectedPaymentMethod == 'COD'
-                                  ? 'Place Order'
-                                  : 'Proceed to Pay',
+                              !grocery.isAppAcceptingOrders
+                                  ? 'Orders Paused'
+                                  : (_selectedPaymentMethod == 'COD'
+                                      ? 'Place Order'
+                                      : 'Proceed to Pay'),
                               style: const TextStyle(
                                 fontSize: 14.5,
                                 fontWeight: FontWeight.w900,
@@ -2444,10 +2474,14 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                               ),
                             ),
                             const SizedBox(width: 6),
-                            const Icon(
-                              Icons.arrow_forward_rounded,
+                            Icon(
+                              !grocery.isAppAcceptingOrders
+                                  ? Icons.pause_circle_filled_rounded
+                                  : Icons.arrow_forward_rounded,
                               size: 16,
-                              color: Color(0xFFF7C415),
+                              color: grocery.isAppAcceptingOrders
+                                  ? const Color(0xFFF7C415)
+                                  : const Color(0xFF9CA3AF),
                             ),
                           ],
                         ),

@@ -54,6 +54,12 @@ service cloud.firestore {
       allow write: if isAuthenticated();
     }
 
+    // Settings (global store & app status, pause status, banners)
+    match /settings/{settingId} {
+      allow read: if true;
+      allow write: if isAuthenticated();
+    }
+
     // 5. Orders: User can only read and create their own orders.
     // They may only update to cancel their own existing pending order.
     match /orders/{orderId} {

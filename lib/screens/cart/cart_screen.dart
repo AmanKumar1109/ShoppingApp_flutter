@@ -617,39 +617,91 @@ class CartScreen extends ConsumerWidget {
           ),
           child: SafeArea(
             top: false,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text(
-                      'Grand Total',
-                      style: TextStyle(
-                        color: Color(0xFF6B7280),
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w600,
-                      ),
+                if (!groceryProvider.isAppAcceptingOrders)
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 10),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFEF2F2),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: const Color(0xFFFCA5A5)),
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '₹${groceryProvider.cartTotalAmount.toStringAsFixed(0)}',
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w900,
-                        color: Color(0xFF19251B),
-                      ),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.pause_circle_filled_rounded,
+                          color: Color(0xFFDC2626),
+                          size: 18,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            groceryProvider.orderPauseMessage,
+                            style: const TextStyle(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF991B1B),
+                              height: 1.25,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text(
+                          'Grand Total',
+                          style: TextStyle(
+                            color: Color(0xFF6B7280),
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          '₹${groceryProvider.cartTotalAmount.toStringAsFixed(0)}',
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w900,
+                            color: Color(0xFF19251B),
+                          ),
+                        ),
+                      ],
+                    ),
+                    CustomPillButton(
+                      text: groceryProvider.isAppAcceptingOrders
+                          ? 'Proceed to Checkout'
+                          : 'Orders Paused',
+                      onPressed: groceryProvider.isAppAcceptingOrders
+                          ? () {
+                              Navigator.pushNamed(context, AppRoutes.checkout);
+                            }
+                          : () {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(groceryProvider.orderPauseMessage),
+                                  backgroundColor: const Color(0xFFDC2626),
+                                  behavior: SnackBarBehavior.floating,
+                                ),
+                              );
+                            },
+                      backgroundColor: groceryProvider.isAppAcceptingOrders
+                          ? const Color(0xFFF7C415)
+                          : const Color(0xFFE5E7EB),
+                      textColor: groceryProvider.isAppAcceptingOrders
+                          ? const Color(0xFF19251B)
+                          : const Color(0xFF9CA3AF),
                     ),
                   ],
-                ),
-                CustomPillButton(
-                  text: 'Proceed to Checkout',
-                  onPressed: () {
-                    Navigator.pushNamed(context, AppRoutes.checkout);
-                  },
-                  backgroundColor: const Color(0xFFF7C415),
-                  textColor: const Color(0xFF19251B),
                 ),
               ],
             ),

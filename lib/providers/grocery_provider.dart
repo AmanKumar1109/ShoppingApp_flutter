@@ -35,12 +35,19 @@ class GroceryProvider extends ChangeNotifier {
   StreamSubscription<List<CategoryModel>>? _categoriesSub;
   StreamSubscription<List<Map<String, dynamic>>>? _categoryCoversSub;
   StreamSubscription<List<Map<String, dynamic>>?>? _homeSectionsSub;
+  StreamSubscription<Map<String, dynamic>>? _settingsSub;
   Map<String, Map<String, dynamic>> _categoryCoversMap = {};
   List<Map<String, dynamic>>? _homeSections;
+  bool _isAppAcceptingOrders = true;
+  String _appOrderPauseMessage =
+      'Online ordering is temporarily paused on our app. You can still browse products & prices!';
 
   List<ProductModel> get products => _products;
   List<CategoryModel> get categories => _categoriesList;
   List<Map<String, dynamic>>? get homeSections => _homeSections;
+  bool get isAppAcceptingOrders => _isAppAcceptingOrders;
+  String get appOrderPauseMessage => _appOrderPauseMessage;
+  String get orderPauseMessage => _appOrderPauseMessage;
   String get selectedCategory => _selectedCategory;
   String get selectedSubcategory => _selectedSubcategory;
   String get searchQuery => _searchQuery;
@@ -169,6 +176,7 @@ class GroceryProvider extends ChangeNotifier {
     _categoriesSub?.cancel();
     _categoryCoversSub?.cancel();
     _homeSectionsSub?.cancel();
+    _settingsSub?.cancel();
     super.dispose();
   }
 
@@ -219,6 +227,26 @@ class GroceryProvider extends ChangeNotifier {
           await prefs.setString(_kHomeSectionsPrefKey, jsonEncode(sections));
         }
       } catch (_) {}
+    });
+
+    // 5. Sync Global Store & App Settings (Order Acceptance / Pause State)
+    _settingsSub = _firestoreService.streamGlobalSettings().listen((settings) {
+      if (settings.isNotEmpty) {
+        final bool appFlag = settings['isAppAcceptingOrders'] as bool? ??
+            settings['isAcceptingOrders'] as bool? ??
+            true;
+        _isAppAcceptingOrders = appFlag;
+
+        final msg = (settings['appOrderPauseMessage'] as String?)?.trim().isNotEmpty == true
+            ? settings['appOrderPauseMessage'] as String
+            : (settings['orderPauseMessage'] as String?)?.trim().isNotEmpty == true
+                ? settings['orderPauseMessage'] as String
+                : null;
+        if (msg != null) {
+          _appOrderPauseMessage = msg.trim();
+        }
+        notifyListeners();
+      }
     });
   }
 
