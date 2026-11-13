@@ -43,6 +43,42 @@ class GroceryProvider extends ChangeNotifier {
   String _appOrderPauseMessage =
       'Online ordering is temporarily paused on our app. You can still browse products & prices!';
 
+  // App Version Control (Hardcoded vs Admin Enforced)
+  static const String hardcodedAppVersion = '1.0.0';
+  String _minAppVersion = '1.0.0';
+  bool _isForceUpdateEnabled = true;
+  String _appUpdateUrl = 'https://play.google.com/store/apps/details?id=com.thegroceryhub.app';
+  String _appUpdateMessage =
+      'A new and improved version of The Grocery Hub is available with exciting new deals and faster delivery. Please update to continue!';
+
+  String get currentAppVersion => hardcodedAppVersion;
+  String get minAppVersion => _minAppVersion;
+  bool get isForceUpdateEnabled => _isForceUpdateEnabled;
+  String get appUpdateUrl => _appUpdateUrl;
+  String get appUpdateMessage => _appUpdateMessage;
+
+  bool get isAppOutdated {
+    if (!_isForceUpdateEnabled) return false;
+    final targetMin = _minAppVersion.trim();
+    if (targetMin.isEmpty) return false;
+    return compareVersions(hardcodedAppVersion, targetMin) < 0;
+  }
+
+  static int compareVersions(String v1, String v2) {
+    final clean1 = v1.split('+').first.trim();
+    final clean2 = v2.split('+').first.trim();
+    final parts1 = clean1.split('.').map((p) => int.tryParse(p) ?? 0).toList();
+    final parts2 = clean2.split('.').map((p) => int.tryParse(p) ?? 0).toList();
+    final maxLen = parts1.length > parts2.length ? parts1.length : parts2.length;
+    for (int i = 0; i < maxLen; i++) {
+      final num1 = i < parts1.length ? parts1[i] : 0;
+      final num2 = i < parts2.length ? parts2[i] : 0;
+      if (num1 < num2) return -1;
+      if (num1 > num2) return 1;
+    }
+    return 0;
+  }
+
   List<ProductModel> get products => _products;
   List<CategoryModel> get categories => _categoriesList;
   List<Map<String, dynamic>>? get homeSections => _homeSections;
@@ -246,6 +282,24 @@ class GroceryProvider extends ChangeNotifier {
         if (msg != null) {
           _appOrderPauseMessage = msg.trim();
         }
+
+        // Sync App Version & Force Update Config
+        final minVer = (settings['minAppVersion'] as String?)?.trim();
+        if (minVer != null && minVer.isNotEmpty) {
+          _minAppVersion = minVer;
+        }
+        if (settings['isForceUpdateEnabled'] != null) {
+          _isForceUpdateEnabled = settings['isForceUpdateEnabled'] as bool;
+        }
+        final updateUrl = (settings['appUpdateUrl'] as String?)?.trim();
+        if (updateUrl != null && updateUrl.isNotEmpty) {
+          _appUpdateUrl = updateUrl;
+        }
+        final updateMsg = (settings['appUpdateMessage'] as String?)?.trim();
+        if (updateMsg != null && updateMsg.isNotEmpty) {
+          _appUpdateMessage = updateMsg;
+        }
+
         notifyListeners();
       }
     });

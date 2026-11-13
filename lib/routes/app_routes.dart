@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/order_model.dart';
 import '../models/product_model.dart';
 import '../screens/auth/forgot_password_screen.dart';
@@ -22,6 +23,8 @@ import '../screens/profile/saved_addresses_screen.dart';
 import '../screens/profile/wishlist_screen.dart';
 import '../screens/settings/theme_settings_screen.dart';
 import '../screens/splash/splash_screen.dart';
+import '../screens/update/app_update_blocked_screen.dart';
+import '../providers/grocery_provider.dart';
 
 class AppRoutes {
   static final GlobalKey<NavigatorState> navigatorKey =
@@ -49,6 +52,7 @@ class AppRoutes {
   static const String themeSettings = '/theme-settings';
   static const String catalog = '/catalog';
   static const String cart = '/cart';
+  static const String appUpdate = '/app-update';
 
   static Map<String, WidgetBuilder> get routes => {
         splash: (context) => const SplashScreen(),
@@ -65,6 +69,17 @@ class AppRoutes {
         complaints: (context) => const ComplaintsScreen(),
         helpSupport: (context) => const HelpSupportScreen(),
         cart: (context) => const CartScreen(),
+        appUpdate: (context) => Consumer(
+              builder: (context, ref, _) {
+                final grocery = ref.watch(groceryProvider);
+                return AppUpdateBlockedScreen(
+                  currentVersion: grocery.currentAppVersion,
+                  minVersion: grocery.minAppVersion,
+                  updateUrl: grocery.appUpdateUrl,
+                  message: grocery.appUpdateMessage,
+                );
+              },
+            ),
         checkout: (context) => const CheckoutScreen(),
         orderSuccess: (context) => const OrderSuccessScreen(),
         orderTracking: (context) => const OrderTrackingScreen(),

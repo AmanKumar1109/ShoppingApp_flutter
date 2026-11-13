@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../providers/grocery_provider.dart';
 import '../../services/notification_service.dart';
 import '../../widgets/custom_bottom_nav.dart';
 import '../../widgets/floating_cart_bar.dart';
@@ -7,16 +9,17 @@ import '../cart/cart_screen.dart';
 import '../categories/categories_screen.dart';
 import '../orders/orders_screen.dart';
 import '../profile/profile_screen.dart';
+import '../update/app_update_blocked_screen.dart';
 import 'home_tab.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends ConsumerState<HomeScreen> {
   int _currentBottomNavIndex = 0;
 
   @override
@@ -34,6 +37,17 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final grocery = ref.watch(groceryProvider);
+
+    // Block app immediately if version is outdated
+    if (grocery.isAppOutdated) {
+      return AppUpdateBlockedScreen(
+        currentVersion: grocery.currentAppVersion,
+        minVersion: grocery.minAppVersion,
+        updateUrl: grocery.appUpdateUrl,
+        message: grocery.appUpdateMessage,
+      );
+    }
     return Scaffold(
       backgroundColor: Colors.white,
       body: Stack(

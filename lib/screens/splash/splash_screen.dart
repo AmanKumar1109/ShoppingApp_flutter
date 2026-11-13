@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/grocery_provider.dart';
 import '../../routes/app_routes.dart';
 import '../../services/notification_service.dart';
 
@@ -42,6 +43,11 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     // Check user persistence and auto-navigate after 2.2 seconds
     _navigationTimer = Timer(const Duration(milliseconds: 2200), () {
       if (!mounted) return;
+      final grocery = ref.read(groceryProvider);
+      if (grocery.isAppOutdated) {
+        Navigator.of(context).pushReplacementNamed(AppRoutes.appUpdate);
+        return;
+      }
       final auth = ref.read(authProvider);
       if (auth.isLoggedIn) {
         Navigator.of(context).pushReplacementNamed(AppRoutes.home).then((_) {
