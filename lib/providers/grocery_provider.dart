@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/category_model.dart';
 import '../models/product_model.dart';
 import '../services/firestore_service.dart';
+import '../services/notification_service.dart';
 import '../services/seed_data.dart';
 import '../utils/search_engine.dart';
 
@@ -570,6 +571,18 @@ class GroceryProvider extends ChangeNotifier {
     _persistCartToStorage();
     _recalculateCoupon();
     notifyListeners();
+
+    // Schedule or extend local Hinglish abandoned cart reminder (2 hours delay)
+    try {
+      final sampleProd = _products.where((p) => p.id == productId).isNotEmpty
+          ? _products.firstWhere((p) => p.id == productId).name
+          : null;
+      NotificationService.instance.scheduleAbandonedCartReminder(
+        delay: const Duration(hours: 2),
+        itemCount: cartCount,
+        sampleItemName: sampleProd,
+      );
+    } catch (_) {}
   }
 
   void removeFromCart(String productId) {
@@ -582,6 +595,18 @@ class GroceryProvider extends ChangeNotifier {
       _persistCartToStorage();
       _recalculateCoupon();
       notifyListeners();
+
+      // If cart is now empty, cancel the reminder. Otherwise extend it.
+      try {
+        if (_cartItems.isEmpty) {
+          NotificationService.instance.cancelAbandonedCartReminder();
+        } else {
+          NotificationService.instance.scheduleAbandonedCartReminder(
+            delay: const Duration(hours: 2),
+            itemCount: cartCount,
+          );
+        }
+      } catch (_) {}
     }
   }
 
@@ -592,6 +617,11 @@ class GroceryProvider extends ChangeNotifier {
     _couponError = null;
     _persistCartToStorage();
     notifyListeners();
+
+    // Cancel reminder upon successful order / checkout
+    try {
+      NotificationService.instance.cancelAbandonedCartReminder();
+    } catch (_) {}
   }
 
   int getQuantity(String productId) {

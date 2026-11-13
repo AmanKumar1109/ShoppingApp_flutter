@@ -6,6 +6,8 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:timezone/data/latest_all.dart' as tz;
+import 'package:timezone/timezone.dart' as tz;
 import '../firebase_options.dart';
 import '../routes/app_routes.dart';
 
@@ -86,7 +88,14 @@ class NotificationService {
         await androidImplementation.createNotificationChannel(_channel);
       }
 
-      // 3. Configure Foreground Presentation Options
+      // 3. Initialize Timezones for Native OS Scheduled Reminders
+      try {
+        tz.initializeTimeZones();
+      } catch (tzErr) {
+        debugPrint('Timezone initialization error: $tzErr');
+      }
+
+      // 4. Configure Foreground Presentation Options
       try {
         await _fcm.setForegroundNotificationPresentationOptions(
           alert: true,
@@ -220,7 +229,11 @@ class NotificationService {
     if (targetRoute != null && targetRoute.toString().isNotEmpty) {
       final routeStr = targetRoute.toString().trim();
       try {
-        if (routeStr == '/orders' ||
+        if (routeStr == '/cart' ||
+            routeStr == AppRoutes.cart ||
+            data['type'] == 'abandoned_cart') {
+          navState.pushNamed(AppRoutes.cart);
+        } else if (routeStr == '/orders' ||
             data['type'] == 'order_status') {
           navState.pushNamed(AppRoutes.home);
         } else if (routeStr == AppRoutes.chat || routeStr == '/chat') {
@@ -333,6 +346,79 @@ class NotificationService {
       }
     } catch (e) {
       debugPrint('Error syncing FCM token with Firestore: $e');
+    }
+  }
+
+  static const int _abandonedCartNotificationId = 99901;
+
+  /// Schedules a catchy, friendly Hinglish reminder when items remain in cart.
+  /// Automatically resets any previous timer so user is never spammed.
+  Future<void> scheduleAbandonedCartReminder({
+    Duration delay = const Duration(hours: 2),
+    int itemCount = 1,
+    String? sampleItemName,
+  }) async {
+    try {
+      await cancelAbandonedCartReminder();
+
+      final scheduledTime = tz.TZDateTime.now(tz.local).add(delay);
+
+      const title = '🛒 Arrey! Cart me kuch reh gaya hai...';
+      final body = (sampleItemName != null && sampleItemName.trim().isNotEmpty)
+          ? '$sampleItemName aur baaki items aapke cart me intezar kar rahe hain! Abhi checkout karein aur 10 minute me delivery paayein ⚡'
+          : 'Aapke cart me $itemCount items bache hue hain! Stock khatam hone se pehle abhi checkout karein 🚀';
+
+      final androidDetails = AndroidNotificationDetails(
+        _channel.id,
+        _channel.name,
+        channelDescription: _channel.description,
+        importance: Importance.max,
+        priority: Priority.high,
+        icon: '@mipmap/ic_launcher',
+        color: const Color(0xFFF7C415),
+        playSound: true,
+        enableVibration: true,
+        styleInformation: BigTextStyleInformation(body),
+      );
+
+      const darwinDetails = DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+      );
+
+      final notificationDetails = NotificationDetails(
+        android: androidDetails,
+        iOS: darwinDetails,
+      );
+
+      await _localNotifications.zonedSchedule(
+        _abandonedCartNotificationId,
+        title,
+        body,
+        scheduledTime,
+        notificationDetails,
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        payload: jsonEncode({
+          'route': AppRoutes.cart,
+          'screen': 'cart',
+          'type': 'abandoned_cart',
+        }),
+      );
+
+      debugPrint('Scheduled Hinglish abandoned cart reminder at $scheduledTime ($body)');
+    } catch (e) {
+      debugPrint('Error scheduling abandoned cart reminder: $e');
+    }
+  }
+
+  /// Cancels any scheduled abandoned cart notification when user checks out or empties cart.
+  Future<void> cancelAbandonedCartReminder() async {
+    try {
+      await _localNotifications.cancel(_abandonedCartNotificationId);
+      debugPrint('Cancelled abandoned cart reminder');
+    } catch (e) {
+      debugPrint('Error cancelling abandoned cart reminder: $e');
     }
   }
 }

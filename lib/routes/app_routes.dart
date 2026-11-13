@@ -4,6 +4,7 @@ import '../models/product_model.dart';
 import '../screens/auth/forgot_password_screen.dart';
 import '../screens/auth/login_screen.dart';
 import '../screens/auth/signup_screen.dart';
+import '../screens/cart/cart_screen.dart';
 import '../screens/catalog/catalog_screen.dart';
 import '../screens/chat/chat_screen.dart';
 import '../screens/checkout/checkout_screen.dart';
@@ -47,6 +48,7 @@ class AppRoutes {
   static const String chat = '/chat';
   static const String themeSettings = '/theme-settings';
   static const String catalog = '/catalog';
+  static const String cart = '/cart';
 
   static Map<String, WidgetBuilder> get routes => {
         splash: (context) => const SplashScreen(),
@@ -62,6 +64,7 @@ class AppRoutes {
         referEarn: (context) => const ReferEarnScreen(),
         complaints: (context) => const ComplaintsScreen(),
         helpSupport: (context) => const HelpSupportScreen(),
+        cart: (context) => const CartScreen(),
         checkout: (context) => const CheckoutScreen(),
         orderSuccess: (context) => const OrderSuccessScreen(),
         orderTracking: (context) => const OrderTrackingScreen(),
