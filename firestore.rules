@@ -60,6 +60,18 @@ service cloud.firestore {
       allow write: if isAuthenticated();
     }
 
+    // FCM Device Tokens (Allows app devices to register for push notifications)
+    match /fcm_tokens/{tokenId} {
+      allow create, update: if true;
+      allow read, delete: if isAuthenticated();
+    }
+
+    // Broadcast Push Notifications (Campaigns created by admin)
+    match /broadcast_notifications/{notificationId} {
+      allow read: if true;
+      allow write: if isAuthenticated();
+    }
+
     // 5. Orders: User can only read and create their own orders.
     // They may only update to cancel their own existing pending order.
     match /orders/{orderId} {

@@ -277,12 +277,21 @@ class NotificationService {
     }
   }
 
-  /// Retrieves device FCM token and syncs it with Firestore for logged-in user.
+  /// Retrieves device FCM token, subscribes to broadcast topics, and syncs it with Firestore.
   Future<void> _retrieveAndSyncToken() async {
     try {
       _fcmToken = await _fcm.getToken();
       debugPrint('FCM Registration Token: $_fcmToken');
-      if (_fcmToken != null) {
+      if (_fcmToken != null && _fcmToken!.isNotEmpty) {
+        // Automatically subscribe device to broadcast topics
+        try {
+          await _fcm.subscribeToTopic('all_users');
+          await _fcm.subscribeToTopic('broadcast_deals');
+          debugPrint('Subscribed to FCM topics: all_users, broadcast_deals');
+        } catch (topicErr) {
+          debugPrint('Topic subscription error: $topicErr');
+        }
+
         await syncTokenWithFirestore(_fcmToken!);
       }
     } catch (e) {
@@ -290,11 +299,28 @@ class NotificationService {
     }
   }
 
-  /// Saves the FCM token under the active user profile in Firestore
+  /// Saves the FCM token under top-level 'fcm_tokens' collection (for all devices, including guests)
+  /// and under the active user's profile in 'users/{userId}' when logged in.
   Future<void> syncTokenWithFirestore(String token) async {
+    if (token.isEmpty) return;
     try {
       final currentUser = FirebaseAuth.instance.currentUser;
-      if (currentUser != null && token.isNotEmpty) {
+      final safeDocId = token.replaceAll('/', '_');
+
+      // 1. Universal Device Registry in 'fcm_tokens' collection
+      await _firestore.collection('fcm_tokens').doc(safeDocId).set({
+        'token': token,
+        'userId': currentUser?.uid,
+        'userEmail': currentUser?.email,
+        'devicePlatform': defaultTargetPlatform.name,
+        'subscribedTopics': ['all_users', 'broadcast_deals'],
+        'updatedAt': FieldValue.serverTimestamp(),
+        'lastActiveAt': FieldValue.serverTimestamp(),
+        'isActive': true,
+      }, SetOptions(merge: true));
+
+      // 2. User Profile Sync (if authenticated)
+      if (currentUser != null) {
         await _firestore.collection('users').doc(currentUser.uid).set({
           'fcmToken': token,
           'fcmTokens': FieldValue.arrayUnion([token]),
@@ -302,6 +328,8 @@ class NotificationService {
           'devicePlatform': defaultTargetPlatform.name,
         }, SetOptions(merge: true));
         debugPrint('FCM Token synced to Firestore for user: ${currentUser.uid}');
+      } else {
+        debugPrint('FCM Device Token registered for guest user in fcm_tokens');
       }
     } catch (e) {
       debugPrint('Error syncing FCM token with Firestore: $e');
