@@ -249,3 +249,4 @@ class AppUpdateBlockedScreen extends StatelessWidget {
     );
   }
 }
+

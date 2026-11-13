@@ -399,6 +399,8 @@ class NotificationService {
         scheduledTime,
         notificationDetails,
         androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
         payload: jsonEncode({
           'route': AppRoutes.cart,
           'screen': 'cart',

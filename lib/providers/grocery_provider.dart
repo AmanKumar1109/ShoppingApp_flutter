@@ -629,7 +629,7 @@ class GroceryProvider extends ChangeNotifier {
     // Schedule or extend local Hinglish abandoned cart reminder (2 hours delay)
     try {
       final sampleProd = _products.where((p) => p.id == productId).isNotEmpty
-          ? _products.firstWhere((p) => p.id == productId).name
+          ? _products.firstWhere((p) => p.id == productId).title
           : null;
       NotificationService.instance.scheduleAbandonedCartReminder(
         delay: const Duration(hours: 2),
