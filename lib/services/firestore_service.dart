@@ -4,6 +4,7 @@ import '../models/category_model.dart';
 import '../models/complaint_model.dart';
 import '../models/order_model.dart';
 import '../models/product_model.dart';
+import 'notification_service.dart';
 import 'seed_data.dart';
 
 class FirestoreService {
@@ -176,10 +177,18 @@ class FirestoreService {
   // --- Orders Management ---
   Future<bool> createOrder(OrderModel order) async {
     try {
+      final orderMap = order.toMap();
+
+      // Attach device FCM token for instant push notifications
+      final token = NotificationService.instance.fcmToken;
+      if (token != null && token.isNotEmpty) {
+        orderMap['fcmToken'] = token;
+      }
+
       await _firestore
           .collection('orders')
           .doc(order.orderId)
-          .set(order.toMap());
+          .set(orderMap);
 
       // Enqueue order confirmation email
       await enqueueOrderMail(order);
