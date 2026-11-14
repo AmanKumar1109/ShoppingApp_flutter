@@ -807,151 +807,17 @@ class _HomeTabState extends ConsumerState<HomeTab> {
 
             const SizedBox(height: 28),
 
-            // 5. BAKERY & BISCUITS PROMOTIONAL BANNER
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: GestureDetector(
-                onTap: () {
-                  Navigator.pushNamed(
-                    context,
-                    AppRoutes.catalog,
-                    arguments: {
-                      'title': 'Bakery & Biscuits',
-                      'sectionType': 'bakery',
-                      'categoryId': 'cat_bakery',
-                    },
-                  );
-                },
-                child: Container(
-                  width: double.infinity,
-                  height: 170,
-                  clipBehavior: Clip.antiAlias,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(24),
-                    gradient: const LinearGradient(
-                      colors: [
-                        Color(0xFFFFF3E0),
-                        Color(0xFFFFE0B2),
-                        Color(0xFFFFCC80),
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.08),
-                        blurRadius: 16,
-                        offset: const Offset(0, 6),
-                      ),
-                    ],
-                  ),
-                  child: Stack(
-                    children: [
-                      Positioned(
-                        right: 8,
-                        top: 12,
-                        bottom: 12,
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(18),
-                          child: const FastCachedImage(
-                            imageUrl:
-                                'https://images.unsplash.com/photo-1499636136210-6f4ee915583e?w=400&auto=format&fit=crop',
-                            width: 140,
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 18,
-                          vertical: 14,
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF19251B),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: const Text(
-                                'OVEN FRESH BAKERY',
-                                style: TextStyle(
-                                  color: Color(0xFFF7C415),
-                                  fontSize: 9.5,
-                                  fontWeight: FontWeight.w900,
-                                  letterSpacing: 0.5,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 5),
-                            const Text(
-                              'Bakery & Biscuits',
-                              style: TextStyle(
-                                fontSize: 17,
-                                fontWeight: FontWeight.w900,
-                                color: Color(0xFF19251B),
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            const Text(
-                              'Up to 25% Off on Cookies & Cakes',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                color: Color(0xFF4B5563),
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            CustomPillButton(
-                              text: 'Shop Bakery',
-                              onPressed: () {
-                                Navigator.pushNamed(
-                                  context,
-                                  AppRoutes.catalog,
-                                  arguments: {
-                                    'title': 'Bakery & Biscuits',
-                                    'sectionType': 'bakery',
-                                    'categoryId': 'cat_bakery',
-                                  },
-                                );
-                              },
-                              backgroundColor: const Color(0xFF19251B),
-                              textColor: const Color(0xFFF7C415),
-                              fontSize: 11.5,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 14,
-                                vertical: 6,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            // 4. BAKERY & BISCUITS PRODUCTS CAROUSEL
-            if (grocery.bakeryAndBiscuitsProducts.isNotEmpty) ...[
+            // 4. TRENDING IN YOUR AREA
+            if (grocery.trendingProducts.isNotEmpty) ...[
               _buildSectionHeader(
-                title: 'Bakery & Biscuits',
+                title: 'Trending in Your Area',
                 onSeeAll: () {
                   Navigator.pushNamed(
                     context,
                     AppRoutes.catalog,
                     arguments: {
-                      'title': 'Bakery & Biscuits',
-                      'sectionType': 'bakery',
-                      'categoryId': 'cat_bakery',
+                      'title': 'Trending in Your Area',
+                      'sectionType': 'trending',
                     },
                   );
                 },
@@ -962,10 +828,10 @@ class _HomeTabState extends ConsumerState<HomeTab> {
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
                   padding: const EdgeInsets.symmetric(horizontal: 20),
-                  itemCount: grocery.bakeryAndBiscuitsProducts.length,
+                  itemCount: grocery.trendingProducts.length,
                   itemBuilder: (context, index) {
-                    final product = grocery.bakeryAndBiscuitsProducts[index];
-                    final heroTag = 'hero_home_bakery_${product.id}_$index';
+                    final product = grocery.trendingProducts[index];
+                    final heroTag = 'hero_home_trending_${product.id}_$index';
                     return Container(
                       width: 168,
                       margin: const EdgeInsets.only(right: 14),
@@ -979,226 +845,11 @@ class _HomeTabState extends ConsumerState<HomeTab> {
                   },
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 28),
             ],
 
-            // 5. TRENDING IN YOUR AREA
-            _buildSectionHeader(
-              title: 'Trending in Your Area',
-              onSeeAll: () {
-                Navigator.pushNamed(
-                  context,
-                  AppRoutes.catalog,
-                  arguments: {
-                    'title': 'Trending in Your Area',
-                    'sectionType': 'trending',
-                  },
-                );
-              },
-            ),
-
-            const SizedBox(height: 12),
-
-            // Trending Products Horizontal Carousel
-            SizedBox(
-              height: 268,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                itemCount: grocery.trendingProducts.length,
-                itemBuilder: (context, index) {
-                  final product = grocery.trendingProducts[index];
-                  final heroTag = 'hero_home_trending_${product.id}_$index';
-                  return Container(
-                    width: 168,
-                    margin: const EdgeInsets.only(right: 14),
-                    child: _buildProductCard(
-                      context,
-                      ref,
-                      product,
-                      heroTag: heroTag,
-                    ),
-                  );
-                },
-              ),
-            ),
-
-            const SizedBox(height: 28),
-
-            // 6. BABY CARE PROMOTIONAL BANNER
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: GestureDetector(
-                onTap: () {
-                  Navigator.pushNamed(
-                    context,
-                    AppRoutes.catalog,
-                    arguments: {
-                      'title': 'Baby Care Essentials',
-                      'sectionType': 'baby',
-                      'categoryId': 'cat_baby_care',
-                    },
-                  );
-                },
-                child: Container(
-                  width: double.infinity,
-                  height: 170,
-                  clipBehavior: Clip.antiAlias,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(24),
-                    gradient: const LinearGradient(
-                      colors: [
-                        Color(0xFFFEF3C7),
-                        Color(0xFFFDE68A),
-                        Color(0xFFFBBF24),
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.08),
-                        blurRadius: 16,
-                        offset: const Offset(0, 6),
-                      ),
-                    ],
-                  ),
-                  child: Stack(
-                    children: [
-                      Positioned(
-                        right: 8,
-                        top: 12,
-                        bottom: 12,
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(18),
-                          child: const FastCachedImage(
-                            imageUrl:
-                                'https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=400&auto=format&fit=crop',
-                            width: 140,
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 18,
-                          vertical: 14,
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF19251B),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: const Text(
-                                'BABY CARE SPECIAL',
-                                style: TextStyle(
-                                  color: Color(0xFFF7C415),
-                                  fontSize: 9.5,
-                                  fontWeight: FontWeight.w900,
-                                  letterSpacing: 0.5,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 5),
-                            const Text(
-                              'Baby Care Essentials',
-                              style: TextStyle(
-                                fontSize: 17,
-                                fontWeight: FontWeight.w900,
-                                color: Color(0xFF19251B),
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            const Text(
-                              'Up to 30% Off on Diapers & Wipes',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                color: Color(0xFF4B5563),
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            CustomPillButton(
-                              text: 'Shop Baby Care',
-                              onPressed: () {
-                                Navigator.pushNamed(
-                                  context,
-                                  AppRoutes.catalog,
-                                  arguments: {
-                                    'title': 'Baby Care Essentials',
-                                    'sectionType': 'baby',
-                                    'categoryId': 'cat_baby_care',
-                                  },
-                                );
-                              },
-                              backgroundColor: const Color(0xFF19251B),
-                              textColor: const Color(0xFFF7C415),
-                              fontSize: 11.5,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 14,
-                                vertical: 6,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            // 7. BABY CARE PRODUCTS CAROUSEL
-            if (grocery.babyCareProducts.isNotEmpty) ...[
-              _buildSectionHeader(
-                title: 'Baby Care Essentials',
-                onSeeAll: () {
-                  Navigator.pushNamed(
-                    context,
-                    AppRoutes.catalog,
-                    arguments: {
-                      'title': 'Baby Care Essentials',
-                      'sectionType': 'baby',
-                      'categoryId': 'cat_baby_care',
-                    },
-                  );
-                },
-              ),
-              const SizedBox(height: 12),
-              SizedBox(
-                height: 268,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  itemCount: grocery.babyCareProducts.length,
-                  itemBuilder: (context, index) {
-                    final product = grocery.babyCareProducts[index];
-                    final heroTag = 'hero_home_baby_${product.id}_$index';
-                    return Container(
-                      width: 168,
-                      margin: const EdgeInsets.only(right: 14),
-                      child: _buildProductCard(
-                        context,
-                        ref,
-                        product,
-                        heroTag: heroTag,
-                      ),
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(height: 24),
-            ],
+            // 5. DYNAMIC CATEGORY SECTIONS (FROM ADMIN PANEL & FIRESTORE)
+            ..._buildDynamicCategorySections(context, ref, grocery),
 
             const SizedBox(height: 30),
             ],
@@ -1206,6 +857,231 @@ class _HomeTabState extends ConsumerState<HomeTab> {
         ],
       ),
     );
+  }
+
+  List<Widget> _buildDynamicCategorySections(
+    BuildContext context,
+    WidgetRef ref,
+    GroceryProvider grocery,
+  ) {
+    final widgets = <Widget>[];
+    final displayCategories = grocery.categories
+        .where((c) =>
+            c.id != 'all' &&
+            c.id != 'Trending' &&
+            c.id != 'BOGO' &&
+            c.isVisible)
+        .toList();
+
+    for (int i = 0; i < displayCategories.length; i++) {
+      final cat = displayCategories[i];
+      final catLower = cat.name.trim().toLowerCase();
+      final catIdLower = cat.id.trim().toLowerCase();
+
+      final catProducts = grocery.products.where((p) {
+        final pCat = p.category.trim().toLowerCase();
+        return pCat == catLower ||
+            pCat == catIdLower ||
+            pCat.contains(catLower) ||
+            catLower.contains(pCat);
+      }).toList();
+
+      if (catProducts.isEmpty) continue;
+
+      // 1. Promotional Category Showcase Banner
+      if (cat.imageUrl != null && cat.imageUrl!.isNotEmpty) {
+        final colorVal = int.tryParse(
+          cat.colorHex.replaceAll('#', '').replaceAll('0x', ''),
+          radix: 16,
+        );
+        final bgCardColor = colorVal != null
+            ? Color(0xFF000000 | colorVal)
+            : const Color(0xFFFFF3E0);
+
+        widgets.add(
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: GestureDetector(
+              onTap: () {
+                Navigator.pushNamed(
+                  context,
+                  AppRoutes.catalog,
+                  arguments: {
+                    'title': cat.name,
+                    'sectionType': 'category',
+                    'categoryId': cat.id,
+                    'categoryName': cat.name,
+                  },
+                );
+              },
+              child: Container(
+                width: double.infinity,
+                height: 170,
+                clipBehavior: Clip.antiAlias,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(24),
+                  gradient: LinearGradient(
+                    colors: [
+                      bgCardColor.withValues(alpha: 0.35),
+                      bgCardColor.withValues(alpha: 0.8),
+                      Colors.white,
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.06),
+                      blurRadius: 16,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                ),
+                child: Stack(
+                  children: [
+                    Positioned(
+                      right: 8,
+                      top: 12,
+                      bottom: 12,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(18),
+                        child: FastCachedImage(
+                          imageUrl: cat.imageUrl!,
+                          width: 140,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 18,
+                        vertical: 14,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF19251B),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              (cat.tag != null && cat.tag!.isNotEmpty)
+                                  ? cat.tag!.toUpperCase()
+                                  : 'FEATURED CATEGORY',
+                              style: const TextStyle(
+                                color: Color(0xFFF7C415),
+                                fontSize: 9.5,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 5),
+                          Text(
+                            cat.name,
+                            style: const TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.w900,
+                              color: Color(0xFF19251B),
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Explore ${catProducts.length} items in ${cat.name}',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF4B5563),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          CustomPillButton(
+                            text: 'Shop ${cat.name}',
+                            onPressed: () {
+                              Navigator.pushNamed(
+                                context,
+                                AppRoutes.catalog,
+                                arguments: {
+                                  'title': cat.name,
+                                  'sectionType': 'category',
+                                  'categoryId': cat.id,
+                                  'categoryName': cat.name,
+                                },
+                              );
+                            },
+                            backgroundColor: const Color(0xFF19251B),
+                            textColor: const Color(0xFFF7C415),
+                            fontSize: 11.5,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 6,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+        widgets.add(const SizedBox(height: 24));
+      }
+
+      // 2. Product Horizontal Carousel
+      widgets.add(
+        _buildSectionHeader(
+          title: cat.name,
+          onSeeAll: () {
+            Navigator.pushNamed(
+              context,
+              AppRoutes.catalog,
+              arguments: {
+                'title': cat.name,
+                'sectionType': 'category',
+                'categoryId': cat.id,
+                'categoryName': cat.name,
+              },
+            );
+          },
+        ),
+      );
+      widgets.add(const SizedBox(height: 12));
+      widgets.add(
+        SizedBox(
+          height: 268,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            itemCount: catProducts.length,
+            itemBuilder: (context, idx) {
+              final product = catProducts[idx];
+              final heroTag = 'hero_home_cat_${cat.id}_${product.id}_$idx';
+              return Container(
+                width: 168,
+                margin: const EdgeInsets.only(right: 14),
+                child: _buildProductCard(
+                  context,
+                  ref,
+                  product,
+                  heroTag: heroTag,
+                ),
+              );
+            },
+          ),
+        ),
+      );
+      widgets.add(const SizedBox(height: 28));
+    }
+
+    return widgets;
   }
 
   Widget _buildDynamicHomeSection(

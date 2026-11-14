@@ -33,17 +33,36 @@ class CategoryModel {
     final resolvedCountStr = (map['itemCount'] != null && (map['itemCount'] as String).isNotEmpty)
         ? map['itemCount'] as String
         : '$count Item${count == 1 ? '' : 's'}';
+    final nameStr = (map['name'] ??
+            map['title'] ??
+            map['category'] ??
+            map['categoryName'] ??
+            map['label'] ??
+            id)
+        .toString()
+        .trim();
+    final imgUrl = (map['imageUrl'] ??
+            map['coverImage'] ??
+            map['image'] ??
+            map['iconUrl'] ??
+            map['photoUrl'])
+        ?.toString()
+        .trim();
+    final isVis = (map['isActive'] as bool?) ??
+        (map['isVisible'] as bool?) ??
+        (map['status'] != 'inactive');
+
     return CategoryModel(
-      id: map['id'] ?? id,
-      name: map['name'] ?? map['title'] ?? id,
+      id: (map['id'] ?? id).toString().trim(),
+      name: nameStr.isNotEmpty ? nameStr : id,
       subcategories: subcats,
       itemCount: resolvedCountStr,
-      icon: map['icon'],
-      colorHex: map['colorHex'] ?? '0xFFFFF4B8',
-      imageUrl: map['imageUrl'] ?? map['coverImage'] ?? map['image'],
-      tag: map['tag'],
+      icon: map['icon']?.toString(),
+      colorHex: map['colorHex']?.toString() ?? '0xFFFFF4B8',
+      imageUrl: (imgUrl != null && imgUrl.isNotEmpty) ? imgUrl : null,
+      tag: map['tag']?.toString(),
       order: (map['order'] is num) ? (map['order'] as num).toInt() : 0,
-      isVisible: map['isActive'] ?? map['isVisible'] ?? true,
+      isVisible: isVis,
     );
   }
 

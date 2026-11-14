@@ -467,17 +467,22 @@ class GroceryProvider extends ChangeNotifier {
     // 4. Firestore Database Categories with live counts & subcategories & custom covers
     int fallbackOrder = 3;
     for (final cat in _rawCategories) {
-      final count = catCounts[cat.name] ?? catCounts[cat.id] ?? 0;
-      final cover = findCover(cat.name, cat.id);
-      final isVis = cover != null ? (cover['isActive'] != false) : cat.isVisible;
-      if (!isVis) continue;
+      if (!cat.isVisible) continue;
 
-      String? resolvedImageUrl = (cover?['imageUrl'] as String?)?.trim();
+      final categoryName =
+          cat.name.trim().isNotEmpty ? cat.name.trim() : cat.id.trim();
+      final count = catCounts[cat.name] ??
+          catCounts[cat.id] ??
+          catCounts[categoryName] ??
+          0;
+      final cover = findCover(categoryName, cat.id);
+
+      String? resolvedImageUrl = cat.imageUrl?.trim();
       if (resolvedImageUrl == null || resolvedImageUrl.isEmpty) {
-        resolvedImageUrl = cat.imageUrl?.trim();
+        resolvedImageUrl = (cover?['imageUrl'] as String?)?.trim();
       }
       if (resolvedImageUrl == null || resolvedImageUrl.isEmpty) {
-        final catLower = cat.name.trim().toLowerCase();
+        final catLower = categoryName.toLowerCase();
         final catIdLower = cat.id.trim().toLowerCase();
         for (final p in _products) {
           final pCatLower = p.category.trim().toLowerCase();
@@ -494,21 +499,60 @@ class GroceryProvider extends ChangeNotifier {
       aggregated.add(
         CategoryModel(
           id: cat.id,
-          name: (cover?['title'] as String?)?.trim().isNotEmpty == true
-              ? (cover!['title'] as String).trim()
-              : cat.name,
+          name: categoryName,
           subcategories: cat.subcategories,
           itemCount: '$count Item${count == 1 ? '' : 's'}',
           icon: cat.icon,
           colorHex: cover?['colorHex'] as String? ?? cat.colorHex,
           imageUrl: resolvedImageUrl,
           tag: cover?['tag'] as String? ?? cat.tag,
-          order: cover != null && cover['order'] != null
-              ? (cover['order'] as num).toInt()
-              : fallbackOrder++,
+          order: cat.order != 0
+              ? cat.order
+              : (cover != null && cover['order'] != null
+                  ? (cover['order'] as num).toInt()
+                  : fallbackOrder++),
           isVisible: true,
         ),
       );
+    }
+
+    // 5. Auto-discover active categories from products not present in _rawCategories
+    for (final productCat in catCounts.keys) {
+      final pCatClean = productCat.trim();
+      if (pCatClean.isEmpty) continue;
+      final pCatLower = pCatClean.toLowerCase();
+
+      final alreadyIncluded = aggregated.any((c) =>
+          c.name.trim().toLowerCase() == pCatLower ||
+          c.id.trim().toLowerCase() == pCatLower);
+
+      if (!alreadyIncluded) {
+        final count = catCounts[productCat] ?? 0;
+        final cover = findCover(pCatClean);
+
+        String? img = (cover?['imageUrl'] as String?)?.trim();
+        if (img == null || img.isEmpty) {
+          for (final p in _products) {
+            if (p.category.trim().toLowerCase() == pCatLower &&
+                p.imageUrl.trim().isNotEmpty) {
+              img = p.imageUrl.trim();
+              break;
+            }
+          }
+        }
+
+        aggregated.add(
+          CategoryModel(
+            id: pCatClean,
+            name: pCatClean,
+            itemCount: '$count Item${count == 1 ? '' : 's'}',
+            imageUrl: img,
+            colorHex: cover?['colorHex'] as String? ?? '0xFFFFF4B8',
+            order: fallbackOrder++,
+            isVisible: true,
+          ),
+        );
+      }
     }
 
     // Sort by designated order
@@ -586,11 +630,24 @@ class GroceryProvider extends ChangeNotifier {
       } else if (_selectedCategory == 'BOGO') {
         result = result.where((p) => p.isBogo).toList();
       } else {
+        final targetCat = _categoriesList.where((c) {
+          final idLower = c.id.toLowerCase().trim();
+          final nameLower = c.name.toLowerCase().trim();
+          final selLower = _selectedCategory.toLowerCase().trim();
+          return idLower == selLower || nameLower == selLower;
+        }).firstOrNull;
+
+        final targetName =
+            (targetCat?.name ?? _selectedCategory).toLowerCase().trim();
+        final targetId =
+            (targetCat?.id ?? _selectedCategory).toLowerCase().trim();
+
         result = result.where((p) {
-          final catLower = _selectedCategory.toLowerCase();
-          return p.category.toLowerCase() == catLower ||
-              p.category.toLowerCase().contains(catLower) ||
-              catLower.contains(p.category.toLowerCase());
+          final pCat = p.category.toLowerCase().trim();
+          return pCat == targetName ||
+              pCat == targetId ||
+              pCat.contains(targetName) ||
+              targetName.contains(pCat);
         }).toList();
       }
     }
