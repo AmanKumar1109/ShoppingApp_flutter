@@ -18,7 +18,7 @@ class CategoriesScreen extends ConsumerWidget {
         .toList();
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF9FAFB),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -29,7 +29,7 @@ class CategoriesScreen extends ConsumerWidget {
                 colors: [
                   Color(0xFFFFF4B8), // Soft yellow header gradient
                   Color(0xFFFFF9E0),
-                  Colors.white,
+                  Color(0xFFF9FAFB),
                 ],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
@@ -118,7 +118,7 @@ class CategoriesScreen extends ConsumerWidget {
 
           const SizedBox(height: 4),
 
-          // Categories Grid with Real Cover Images & Badges
+          // Categories Grid with Full-Bleed Cover Images & Bottom Shadow Scrim
           Expanded(
             child: categories.isEmpty
                 ? const Center(
@@ -127,12 +127,12 @@ class CategoriesScreen extends ConsumerWidget {
                     ),
                   )
                 : GridView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 3,
-                      childAspectRatio: 0.72,
+                      childAspectRatio: 0.80,
                       crossAxisSpacing: 10,
-                      mainAxisSpacing: 14,
+                      mainAxisSpacing: 12,
                     ),
                     itemCount: categories.length,
                     itemBuilder: (context, index) {
@@ -151,109 +151,136 @@ class CategoriesScreen extends ConsumerWidget {
                         },
                         child: Container(
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: const Color(0xFF1E2D24),
                             borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: const Color(0xFFF0F2F5),
-                              width: 1.2,
-                            ),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.03),
+                                color: Colors.black.withValues(alpha: 0.08),
                                 blurRadius: 8,
-                                offset: const Offset(0, 2),
+                                offset: const Offset(0, 3),
                               ),
                             ],
                           ),
+                          clipBehavior: Clip.antiAlias,
                           child: Stack(
-                            alignment: Alignment.center,
                             children: [
-                              // Full-width centered container to ensure 100% mathematical center alignment
-                              SizedBox(
-                                width: double.infinity,
-                                height: double.infinity,
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 6,
-                                    vertical: 8,
-                                  ),
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    crossAxisAlignment: CrossAxisAlignment.center,
-                                    children: [
-                                      // Category Cover Image (Strictly Centered)
-                                      Center(
-                                        child: Container(
-                                          width: 60,
-                                          height: 60,
-                                          decoration: BoxDecoration(
-                                            color: const Color(0xFFFFF9E5),
-                                            borderRadius: BorderRadius.circular(15),
-                                            border: Border.all(
-                                              color: const Color(0xFFFFF0B3),
-                                              width: 1,
+                              // 1. Full-Bleed Cover Image (Spans 100% of Container)
+                              Positioned.fill(
+                                child: hasImage
+                                    ? FastCachedImage(
+                                        imageUrl: category.imageUrl!.trim(),
+                                        fit: BoxFit.cover,
+                                        errorWidget: Container(
+                                          decoration: const BoxDecoration(
+                                            gradient: LinearGradient(
+                                              colors: [
+                                                Color(0xFF2C3E30),
+                                                Color(0xFF19251B),
+                                              ],
+                                              begin: Alignment.topCenter,
+                                              end: Alignment.bottomCenter,
                                             ),
                                           ),
-                                          child: ClipRRect(
-                                            borderRadius: BorderRadius.circular(14),
-                                            child: hasImage
-                                                ? FastCachedImage(
-                                                    imageUrl: category.imageUrl!.trim(),
-                                                    width: 60,
-                                                    height: 60,
-                                                    fit: BoxFit.cover,
-                                                    errorWidget: Center(
-                                                      child: Icon(
-                                                        category.iconData,
-                                                        size: 26,
-                                                        color: const Color(0xFF19251B),
-                                                      ),
-                                                    ),
-                                                  )
-                                                : Center(
-                                                    child: Icon(
-                                                      category.iconData,
-                                                      size: 26,
-                                                      color: const Color(0xFF19251B),
-                                                    ),
-                                                  ),
+                                          child: Center(
+                                            child: Icon(
+                                              category.iconData,
+                                              size: 32,
+                                              color: const Color(0xFFF7C415),
+                                            ),
+                                          ),
+                                        ),
+                                      )
+                                    : Container(
+                                        decoration: const BoxDecoration(
+                                          gradient: LinearGradient(
+                                            colors: [
+                                              Color(0xFF2C3E30),
+                                              Color(0xFF19251B),
+                                            ],
+                                            begin: Alignment.topCenter,
+                                            end: Alignment.bottomCenter,
+                                          ),
+                                        ),
+                                        child: Center(
+                                          child: Icon(
+                                            category.iconData,
+                                            size: 32,
+                                            color: const Color(0xFFF7C415),
                                           ),
                                         ),
                                       ),
-                                      const SizedBox(height: 8),
-                                      SizedBox(
-                                        width: double.infinity,
-                                        child: Text(
-                                          category.name,
-                                          textAlign: TextAlign.center,
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: const TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w700,
-                                            color: Color(0xFF19251B),
-                                            height: 1.15,
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(height: 2),
-                                      SizedBox(
-                                        width: double.infinity,
-                                        child: Text(
-                                          category.itemCount,
-                                          textAlign: TextAlign.center,
-                                          style: const TextStyle(
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.w600,
-                                            color: Color(0xFF007A3D),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
+                              ),
+
+                              // 2. Smooth Shadow Scrim at Bottom (for 100% Text Readability)
+                              Positioned.fill(
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topCenter,
+                                      end: Alignment.bottomCenter,
+                                      stops: const [0.0, 0.35, 0.65, 1.0],
+                                      colors: [
+                                        Colors.black.withValues(alpha: 0.0),
+                                        Colors.black.withValues(alpha: 0.15),
+                                        Colors.black.withValues(alpha: 0.70),
+                                        Colors.black.withValues(alpha: 0.95),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ),
-                              // Optional Dynamic Tag Badge (e.g. HOT, NEW, SALE)
+
+                              // 3. Crisp White Text Labels Positioned at Bottom
+                              Positioned(
+                                left: 6,
+                                right: 6,
+                                bottom: 8,
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      category.name,
+                                      textAlign: TextAlign.center,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        fontSize: 11.5,
+                                        fontWeight: FontWeight.w800,
+                                        color: Colors.white,
+                                        height: 1.15,
+                                        letterSpacing: 0.1,
+                                        shadows: [
+                                          Shadow(
+                                            color: Colors.black,
+                                            blurRadius: 4,
+                                            offset: Offset(0, 1),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      category.itemCount,
+                                      textAlign: TextAlign.center,
+                                      style: const TextStyle(
+                                        fontSize: 9.5,
+                                        fontWeight: FontWeight.w600,
+                                        color: Color(0xFFFFF4B8),
+                                        shadows: [
+                                          Shadow(
+                                            color: Colors.black,
+                                            blurRadius: 3,
+                                            offset: Offset(0, 1),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+
+                              // 4. Optional Dynamic Tag Badge (HOT, NEW, SALE)
                               if (category.tag != null &&
                                   category.tag!.trim().isNotEmpty)
                                 Positioned(
@@ -262,11 +289,18 @@ class CategoriesScreen extends ConsumerWidget {
                                   child: Container(
                                     padding: const EdgeInsets.symmetric(
                                       horizontal: 5,
-                                      vertical: 2,
+                                      vertical: 2.5,
                                     ),
                                     decoration: BoxDecoration(
                                       color: const Color(0xFFF7C415),
                                       borderRadius: BorderRadius.circular(5),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withValues(alpha: 0.3),
+                                          blurRadius: 4,
+                                          offset: const Offset(0, 1),
+                                        ),
+                                      ],
                                     ),
                                     child: Text(
                                       category.tag!.trim().toUpperCase(),
