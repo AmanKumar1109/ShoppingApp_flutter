@@ -20,13 +20,16 @@ class FloatingCartBar extends ConsumerWidget {
     }
 
     String? firstItemImageUrl;
-    if (grocery.cartItems.isNotEmpty) {
+    if (grocery.cartItems.isNotEmpty && grocery.products.isNotEmpty) {
       final firstId = grocery.cartItems.keys.first;
-      final match = grocery.products.firstWhere(
-        (p) => p.id == firstId,
-        orElse: () => grocery.products.first,
-      );
-      firstItemImageUrl = match.imageUrl;
+      try {
+        final match = grocery.products.firstWhere(
+          (p) => p.id == firstId,
+        );
+        firstItemImageUrl = match.imageUrl;
+      } catch (_) {
+        firstItemImageUrl = grocery.products.firstOrNull?.imageUrl;
+      }
     }
 
     return Positioned(
