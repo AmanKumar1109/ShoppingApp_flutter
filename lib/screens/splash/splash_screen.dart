@@ -26,22 +26,21 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
     _animController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1200),
+      duration: const Duration(milliseconds: 900),
     );
 
-    _scaleAnimation = Tween<double>(begin: 0.85, end: 1.0).animate(
-      CurvedAnimation(parent: _animController, curve: Curves.easeOutBack),
+    _scaleAnimation = Tween<double>(begin: 0.92, end: 1.0).animate(
+      CurvedAnimation(parent: _animController, curve: Curves.easeOutCubic),
     );
 
-    _fadeAnimation = CurvedAnimation(
-      parent: _animController,
-      curve: Curves.easeIn,
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animController, curve: Curves.easeIn),
     );
 
     _animController.forward();
 
-    // Check user persistence and auto-navigate after 2.2 seconds
-    _navigationTimer = Timer(const Duration(milliseconds: 2200), () {
+    // Check user persistence and auto-navigate after 2.0 seconds
+    _navigationTimer = Timer(const Duration(milliseconds: 2000), () {
       if (!mounted) return;
       final grocery = ref.read(groceryProvider);
       if (grocery.isAppOutdated) {
@@ -57,6 +56,15 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
         Navigator.of(context).pushReplacementNamed(AppRoutes.onboarding);
       }
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    precacheImage(
+      const AssetImage('assets/images/splashScreenlogo.png'),
+      context,
+    );
   }
 
   @override

@@ -2,9 +2,4 @@
 <!-- Native Splash Screen shown instantly at 0ms cold start while Flutter engine initializes -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:drawable="@color/splash_background" />
-    <item>
-        <bitmap
-            android:gravity="center"
-            android:src="@mipmap/launcher_icon" />
-    </item>
 </layer-list>
