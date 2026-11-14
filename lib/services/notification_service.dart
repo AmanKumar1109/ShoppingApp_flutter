@@ -62,7 +62,7 @@ class NotificationService {
 
     try {
       // 1. Android & iOS Initialization Settings (Do not prompt on startup/splash)
-      const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+      const androidSettings = AndroidInitializationSettings('@mipmap/launcher_icon');
       const darwinSettings = DarwinInitializationSettings(
         requestAlertPermission: false,
         requestBadgePermission: false,
@@ -185,7 +185,7 @@ class NotificationService {
       channelDescription: _channel.description,
       importance: Importance.max,
       priority: Priority.high,
-      icon: '@mipmap/ic_launcher',
+      icon: '@mipmap/launcher_icon',
       color: const Color(0xFFF7C415),
       playSound: true,
       enableVibration: true,
