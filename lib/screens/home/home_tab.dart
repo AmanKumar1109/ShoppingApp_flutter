@@ -810,117 +810,130 @@ class _HomeTabState extends ConsumerState<HomeTab> {
             // 5. BAKERY & BISCUITS PROMOTIONAL BANNER
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Container(
-                width: double.infinity,
-                height: 170,
-                clipBehavior: Clip.antiAlias,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(24),
-                  gradient: const LinearGradient(
-                    colors: [
-                      Color(0xFFFFF3E0),
-                      Color(0xFFFFE0B2),
-                      Color(0xFFFFCC80),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.08),
-                      blurRadius: 16,
-                      offset: const Offset(0, 6),
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.pushNamed(
+                    context,
+                    AppRoutes.catalog,
+                    arguments: {
+                      'title': 'Bakery & Biscuits',
+                      'sectionType': 'bakery',
+                      'categoryId': 'cat_bakery',
+                    },
+                  );
+                },
+                child: Container(
+                  width: double.infinity,
+                  height: 170,
+                  clipBehavior: Clip.antiAlias,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(24),
+                    gradient: const LinearGradient(
+                      colors: [
+                        Color(0xFFFFF3E0),
+                        Color(0xFFFFE0B2),
+                        Color(0xFFFFCC80),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
-                  ],
-                ),
-                child: Stack(
-                  children: [
-                    Positioned(
-                      right: 8,
-                      top: 12,
-                      bottom: 12,
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(18),
-                        child: const FastCachedImage(
-                          imageUrl:
-                              'https://images.unsplash.com/photo-1499636136210-6f4ee915583e?w=400&auto=format&fit=crop',
-                          width: 140,
-                          fit: BoxFit.cover,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.08),
+                        blurRadius: 16,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: Stack(
+                    children: [
+                      Positioned(
+                        right: 8,
+                        top: 12,
+                        bottom: 12,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(18),
+                          child: const FastCachedImage(
+                            imageUrl:
+                                'https://images.unsplash.com/photo-1499636136210-6f4ee915583e?w=400&auto=format&fit=crop',
+                            width: 140,
+                            fit: BoxFit.cover,
+                          ),
                         ),
                       ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 18,
-                        vertical: 14,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF19251B),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: const Text(
-                              'OVEN FRESH BAKERY',
-                              style: TextStyle(
-                                color: Color(0xFFF7C415),
-                                fontSize: 9.5,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 0.5,
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 18,
+                          vertical: 14,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF19251B),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: const Text(
+                                'OVEN FRESH BAKERY',
+                                style: TextStyle(
+                                  color: Color(0xFFF7C415),
+                                  fontSize: 9.5,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 0.5,
+                                ),
                               ),
                             ),
-                          ),
-                          const SizedBox(height: 5),
-                          const Text(
-                            'Bakery & Biscuits',
-                            style: TextStyle(
-                              fontSize: 17,
-                              fontWeight: FontWeight.w900,
-                              color: Color(0xFF19251B),
+                            const SizedBox(height: 5),
+                            const Text(
+                              'Bakery & Biscuits',
+                              style: TextStyle(
+                                fontSize: 17,
+                                fontWeight: FontWeight.w900,
+                                color: Color(0xFF19251B),
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 2),
-                          const Text(
-                            'Up to 25% Off on Cookies & Cakes',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF4B5563),
+                            const SizedBox(height: 2),
+                            const Text(
+                              'Up to 25% Off on Cookies & Cakes',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF4B5563),
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 8),
-                          CustomPillButton(
-                            text: 'Shop Bakery',
-                            onPressed: () {
-                              Navigator.pushNamed(
-                                context,
-                                AppRoutes.catalog,
-                                arguments: {
-                                  'title': 'Bakery & Biscuits',
-                                  'sectionType': 'bakery',
-                                  'categoryId': 'cat_bakery',
-                                },
-                              );
-                            },
-                            backgroundColor: const Color(0xFF19251B),
-                            textColor: const Color(0xFFF7C415),
-                            fontSize: 11.5,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 6,
+                            const SizedBox(height: 8),
+                            CustomPillButton(
+                              text: 'Shop Bakery',
+                              onPressed: () {
+                                Navigator.pushNamed(
+                                  context,
+                                  AppRoutes.catalog,
+                                  arguments: {
+                                    'title': 'Bakery & Biscuits',
+                                    'sectionType': 'bakery',
+                                    'categoryId': 'cat_bakery',
+                                  },
+                                );
+                              },
+                              backgroundColor: const Color(0xFF19251B),
+                              textColor: const Color(0xFFF7C415),
+                              fontSize: 11.5,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 6,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -1015,117 +1028,130 @@ class _HomeTabState extends ConsumerState<HomeTab> {
             // 6. BABY CARE PROMOTIONAL BANNER
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Container(
-                width: double.infinity,
-                height: 170,
-                clipBehavior: Clip.antiAlias,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(24),
-                  gradient: const LinearGradient(
-                    colors: [
-                      Color(0xFFFEF3C7),
-                      Color(0xFFFDE68A),
-                      Color(0xFFFBBF24),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.08),
-                      blurRadius: 16,
-                      offset: const Offset(0, 6),
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.pushNamed(
+                    context,
+                    AppRoutes.catalog,
+                    arguments: {
+                      'title': 'Baby Care Essentials',
+                      'sectionType': 'baby',
+                      'categoryId': 'cat_baby_care',
+                    },
+                  );
+                },
+                child: Container(
+                  width: double.infinity,
+                  height: 170,
+                  clipBehavior: Clip.antiAlias,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(24),
+                    gradient: const LinearGradient(
+                      colors: [
+                        Color(0xFFFEF3C7),
+                        Color(0xFFFDE68A),
+                        Color(0xFFFBBF24),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
-                  ],
-                ),
-                child: Stack(
-                  children: [
-                    Positioned(
-                      right: 8,
-                      top: 12,
-                      bottom: 12,
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(18),
-                        child: const FastCachedImage(
-                          imageUrl:
-                              'https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=400&auto=format&fit=crop',
-                          width: 140,
-                          fit: BoxFit.cover,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.08),
+                        blurRadius: 16,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: Stack(
+                    children: [
+                      Positioned(
+                        right: 8,
+                        top: 12,
+                        bottom: 12,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(18),
+                          child: const FastCachedImage(
+                            imageUrl:
+                                'https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=400&auto=format&fit=crop',
+                            width: 140,
+                            fit: BoxFit.cover,
+                          ),
                         ),
                       ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 18,
-                        vertical: 14,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF19251B),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: const Text(
-                              'BABY CARE SPECIAL',
-                              style: TextStyle(
-                                color: Color(0xFFF7C415),
-                                fontSize: 9.5,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 0.5,
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 18,
+                          vertical: 14,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF19251B),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: const Text(
+                                'BABY CARE SPECIAL',
+                                style: TextStyle(
+                                  color: Color(0xFFF7C415),
+                                  fontSize: 9.5,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 0.5,
+                                ),
                               ),
                             ),
-                          ),
-                          const SizedBox(height: 5),
-                          const Text(
-                            'Baby Care Essentials',
-                            style: TextStyle(
-                              fontSize: 17,
-                              fontWeight: FontWeight.w900,
-                              color: Color(0xFF19251B),
+                            const SizedBox(height: 5),
+                            const Text(
+                              'Baby Care Essentials',
+                              style: TextStyle(
+                                fontSize: 17,
+                                fontWeight: FontWeight.w900,
+                                color: Color(0xFF19251B),
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 2),
-                          const Text(
-                            'Up to 30% Off on Diapers & Wipes',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF4B5563),
+                            const SizedBox(height: 2),
+                            const Text(
+                              'Up to 30% Off on Diapers & Wipes',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF4B5563),
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 8),
-                          CustomPillButton(
-                            text: 'Shop Baby Care',
-                            onPressed: () {
-                              Navigator.pushNamed(
-                                context,
-                                AppRoutes.catalog,
-                                arguments: {
-                                  'title': 'Baby Care Essentials',
-                                  'sectionType': 'baby',
-                                  'categoryId': 'cat_baby_care',
-                                },
-                              );
-                            },
-                            backgroundColor: const Color(0xFF19251B),
-                            textColor: const Color(0xFFF7C415),
-                            fontSize: 11.5,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 6,
+                            const SizedBox(height: 8),
+                            CustomPillButton(
+                              text: 'Shop Baby Care',
+                              onPressed: () {
+                                Navigator.pushNamed(
+                                  context,
+                                  AppRoutes.catalog,
+                                  arguments: {
+                                    'title': 'Baby Care Essentials',
+                                    'sectionType': 'baby',
+                                    'categoryId': 'cat_baby_care',
+                                  },
+                                );
+                              },
+                              backgroundColor: const Color(0xFF19251B),
+                              textColor: const Color(0xFFF7C415),
+                              fontSize: 11.5,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 6,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -1307,12 +1333,19 @@ class _HomeTabState extends ConsumerState<HomeTab> {
           _buildSectionHeader(
             title: section['title'] ?? targetCat,
             onSeeAll: () {
+              final lowerCat = targetCat.toLowerCase().trim();
+              String secType = 'category';
+              if (lowerCat.contains('bakery') || lowerCat.contains('biscuit')) {
+                secType = 'bakery';
+              } else if (lowerCat.contains('baby')) {
+                secType = 'baby';
+              }
               Navigator.pushNamed(
                 context,
                 AppRoutes.catalog,
                 arguments: {
                   'title': section['title'] ?? targetCat,
-                  'sectionType': 'category',
+                  'sectionType': secType,
                   'categoryId':
                       section['categoryId'] ?? section['targetCategory'],
                   'categoryName': section['targetCategory'] ?? section['title'],
@@ -1356,121 +1389,144 @@ class _HomeTabState extends ConsumerState<HomeTab> {
           (section['buttonText'] ?? 'Shop Now').toString().trim();
       final targetCat = (section['targetCategory'] ?? '').toString().trim();
 
+      void openBannerCatalog() {
+        final lower = targetCat.toLowerCase().trim();
+        String secType = 'category';
+        if (lower.contains('bakery') || lower.contains('biscuit')) {
+          secType = 'bakery';
+        } else if (lower.contains('baby')) {
+          secType = 'baby';
+        } else if (lower.contains('deal')) {
+          secType = 'deals';
+        } else if (lower.contains('trend')) {
+          secType = 'trending';
+        } else if (lower.contains('bogo')) {
+          secType = 'bogo';
+        } else if (targetCat.isEmpty) {
+          secType = 'all';
+        }
+
+        Navigator.pushNamed(
+          context,
+          AppRoutes.catalog,
+          arguments: {
+            'title': title.isNotEmpty
+                ? title
+                : (targetCat.isNotEmpty ? targetCat : 'Special Deals'),
+            'sectionType': secType,
+            'categoryId': section['categoryId'] ??
+                (targetCat.isNotEmpty ? targetCat : null),
+            'categoryName': targetCat,
+          },
+        );
+      }
+
       return Padding(
         padding: const EdgeInsets.only(left: 20, right: 20, bottom: 24),
-        child: Container(
-          width: double.infinity,
-          height: 170,
-          clipBehavior: Clip.antiAlias,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(24),
-            gradient: LinearGradient(
-              colors: gradientColors,
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.08),
-                blurRadius: 16,
-                offset: const Offset(0, 6),
+        child: GestureDetector(
+          onTap: openBannerCatalog,
+          child: Container(
+            width: double.infinity,
+            height: 170,
+            clipBehavior: Clip.antiAlias,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(24),
+              gradient: LinearGradient(
+                colors: gradientColors,
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
-            ],
-          ),
-          child: Stack(
-            children: [
-              if (imageUrl.isNotEmpty)
-                Positioned(
-                  right: 8,
-                  top: 12,
-                  bottom: 12,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(18),
-                    child: FastCachedImage(
-                      imageUrl: imageUrl,
-                      width: 140,
-                      fit: BoxFit.cover,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.08),
+                  blurRadius: 16,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+            ),
+            child: Stack(
+              children: [
+                if (imageUrl.isNotEmpty)
+                  Positioned(
+                    right: 8,
+                    top: 12,
+                    bottom: 12,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(18),
+                      child: FastCachedImage(
+                        imageUrl: imageUrl,
+                        width: 140,
+                        fit: BoxFit.cover,
+                      ),
                     ),
                   ),
-                ),
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 18,
-                  vertical: 14,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    if (badge.isNotEmpty) ...[
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF19251B),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          badge,
-                          style: const TextStyle(
-                            color: Color(0xFFF7C415),
-                            fontSize: 9.5,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 0.5,
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 18,
+                    vertical: 14,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (badge.isNotEmpty) ...[
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF19251B),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            badge,
+                            style: const TextStyle(
+                              color: Color(0xFFF7C415),
+                              fontSize: 9.5,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 0.5,
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 5),
-                    ],
-                    Text(
-                      title.isNotEmpty ? title : 'Special Offer',
-                      style: const TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w900,
-                        color: Color(0xFF19251B),
-                      ),
-                    ),
-                    if (subtitle.isNotEmpty) ...[
-                      const SizedBox(height: 2),
+                        const SizedBox(height: 5),
+                      ],
                       Text(
-                        subtitle,
+                        title.isNotEmpty ? title : 'Special Offer',
                         style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF4B5563),
+                          fontSize: 17,
+                          fontWeight: FontWeight.w900,
+                          color: Color(0xFF19251B),
+                        ),
+                      ),
+                      if (subtitle.isNotEmpty) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          subtitle,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF4B5563),
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 8),
+                      CustomPillButton(
+                        text: buttonText,
+                        onPressed: openBannerCatalog,
+                        backgroundColor: const Color(0xFF19251B),
+                        textColor: const Color(0xFFF7C415),
+                        fontSize: 11.5,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 6,
                         ),
                       ),
                     ],
-                    const SizedBox(height: 8),
-                    CustomPillButton(
-                      text: buttonText,
-                      onPressed: () {
-                        Navigator.pushNamed(
-                          context,
-                          AppRoutes.catalog,
-                          arguments: {
-                            'title': title.isNotEmpty ? title : 'Special Deals',
-                            'sectionType':
-                                targetCat.isNotEmpty ? 'category' : 'deals',
-                            'categoryId': section['categoryId'] ?? targetCat,
-                            'categoryName': targetCat,
-                          },
-                        );
-                      },
-                      backgroundColor: const Color(0xFF19251B),
-                      textColor: const Color(0xFFF7C415),
-                      fontSize: 11.5,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 6,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       );

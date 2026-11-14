@@ -78,7 +78,9 @@ class PromoAdBannerItem {
       accentColor: parseAccent(data['accentColor']),
       targetTitle: (data['targetTitle'] ?? 'Products').toString(),
       sectionType: (data['sectionType'] ?? 'all').toString(),
-      categoryId: data['categoryId']?.toString(),
+      categoryId: data['categoryId']?.toString() ??
+          data['targetCategory']?.toString() ??
+          data['category']?.toString(),
       searchTerm: data['searchTerm']?.toString(),
     );
   }
@@ -133,7 +135,7 @@ class _PromoAdBannerCarouselState extends State<PromoAdBannerCarousel> {
       ],
       accentColor: Color(0xFFA855F7),
       targetTitle: 'Cadbury Brownies & Chocolates',
-      sectionType: 'all',
+      sectionType: 'bakery',
       searchTerm: 'brownie',
       categoryId: 'cat_bakery',
     ),
@@ -166,7 +168,7 @@ class _PromoAdBannerCarouselState extends State<PromoAdBannerCarousel> {
       ],
       accentColor: Color(0xFFEC4899),
       targetTitle: 'Cadbury Silk & Chocolates',
-      sectionType: 'all',
+      sectionType: 'bakery',
       searchTerm: 'dairy milk',
       categoryId: 'cat_bakery',
     ),

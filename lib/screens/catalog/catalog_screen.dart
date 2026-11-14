@@ -45,11 +45,61 @@ class _CatalogScreenState extends ConsumerState<CatalogScreen> {
     final initialSearch = widget.searchTerm?.trim() ?? '';
     _searchQuery = initialSearch;
     _searchController = TextEditingController(text: initialSearch);
-    if (widget.sectionType != null && widget.sectionType != 'all') {
-      _selectedCategoryFilter = widget.sectionType!;
-    } else if (widget.categoryId != null && widget.categoryId!.isNotEmpty) {
-      _selectedCategoryFilter = widget.categoryId!;
+
+    // Resolve initial category filter cleanly
+    final secType = (widget.sectionType ?? '').trim();
+    final catId = (widget.categoryId ?? '').trim();
+    final title = widget.title.trim();
+
+    if (secType.isNotEmpty &&
+        secType != 'all' &&
+        secType != 'category' &&
+        secType != 'promo_banner') {
+      _selectedCategoryFilter = secType;
+    } else if (catId.isNotEmpty && catId != 'all') {
+      _selectedCategoryFilter = catId;
+    } else if (title.toLowerCase().contains('bakery') ||
+        title.toLowerCase().contains('biscuit') ||
+        title.toLowerCase().contains('bread')) {
+      _selectedCategoryFilter = 'bakery';
+    } else if (title.toLowerCase().contains('baby')) {
+      _selectedCategoryFilter = 'baby';
+    } else if (title.toLowerCase().contains('deal')) {
+      _selectedCategoryFilter = 'deals';
+    } else if (title.toLowerCase().contains('trend')) {
+      _selectedCategoryFilter = 'trending';
+    } else {
+      _selectedCategoryFilter = 'all';
     }
+  }
+
+  bool _isFilterActive(String filterKey) {
+    final cur = _selectedCategoryFilter.toLowerCase().trim();
+    final key = filterKey.toLowerCase().trim();
+    if (cur == key) return true;
+    if (key == 'bakery' &&
+        (cur.contains('bakery') ||
+            cur.contains('bake') ||
+            cur.contains('biscuit') ||
+            cur.contains('sweet') ||
+            cur.contains('cookie') ||
+            cur.contains('bread') ||
+            cur == 'cat_bakery')) {
+      return true;
+    }
+    if (key == 'baby' &&
+        (cur.contains('baby') ||
+            cur == 'cat_baby_care' ||
+            cur.contains('diaper'))) {
+      return true;
+    }
+    if (key == 'deals' && (cur.contains('deal') || cur == 'special_deals')) {
+      return true;
+    }
+    if (key == 'trending' && cur.contains('trend')) {
+      return true;
+    }
+    return false;
   }
 
   @override
@@ -93,18 +143,62 @@ class _CatalogScreenState extends ConsumerState<CatalogScreen> {
 
     // Apply Active Category / Section Filter
     if (_selectedCategoryFilter != 'all') {
-      final filterLower = _selectedCategoryFilter.toLowerCase();
+      final filterLower = _selectedCategoryFilter.toLowerCase().trim();
       if (filterLower == 'deals' || filterLower == 'deal') {
         list = list.where((p) => p.isDeal || p.offPercentage >= 15).toList();
       } else if (filterLower == 'trending') {
         list = list.where((p) => p.isTrending).toList();
       } else if (filterLower == 'bogo') {
         list = list.where((p) => p.isBogo).toList();
-      } else if (filterLower == 'baby' || filterLower.contains('baby')) {
+      } else if (filterLower == 'baby' ||
+          filterLower.contains('baby') ||
+          filterLower.contains('diaper') ||
+          filterLower == 'cat_baby_care') {
         list = grocery.babyCareProducts;
-      } else if (filterLower == 'bakery' || filterLower.contains('bakery')) {
-        list = grocery.bakeryAndBiscuitsProducts;
-      } else if (filterLower == 'cleaning' || filterLower.contains('cleaning')) {
+      } else if (filterLower == 'bakery' ||
+          filterLower.contains('bakery') ||
+          filterLower.contains('biscuit') ||
+          filterLower.contains('bake') ||
+          filterLower.contains('sweet') ||
+          filterLower.contains('bread') ||
+          filterLower.contains('cake') ||
+          filterLower.contains('cookie') ||
+          filterLower == 'cat_bakery') {
+        // Direct category and tag matching for bakery
+        final matched = list.where((p) {
+          final c = p.category.toLowerCase();
+          final t = p.title.toLowerCase();
+          final sub = p.subcategory.toLowerCase();
+          return c.contains('bake') ||
+              c.contains('biscuit') ||
+              c.contains('sweet') ||
+              c.contains('bread') ||
+              c.contains('cake') ||
+              c.contains('cookie') ||
+              sub.contains('cookie') ||
+              sub.contains('rusk') ||
+              sub.contains('cake') ||
+              sub.contains('pastr') ||
+              sub.contains('biscuit') ||
+              sub.contains('bread') ||
+              t.contains('biscuit') ||
+              t.contains('bread') ||
+              t.contains('cake') ||
+              t.contains('cookie') ||
+              t.contains('brownie') ||
+              p.tags.any((tag) =>
+                  tag.toLowerCase().contains('bake') ||
+                  tag.toLowerCase().contains('biscuit') ||
+                  tag.toLowerCase().contains('bread') ||
+                  tag.toLowerCase().contains('cake') ||
+                  tag.toLowerCase().contains('cookie') ||
+                  tag.toLowerCase().contains('sweet'));
+        }).toList();
+
+        list = matched.isNotEmpty ? matched : grocery.bakeryAndBiscuitsProducts;
+      } else if (filterLower == 'cleaning' ||
+          filterLower.contains('cleaning') ||
+          filterLower == 'cat_cleaning') {
         list = list.where((p) =>
             p.category.toLowerCase().contains('cleaning') ||
             p.subcategory.toLowerCase().contains('detergent') ||
@@ -115,7 +209,9 @@ class _CatalogScreenState extends ConsumerState<CatalogScreen> {
                   'laundry',
                   'ariel',
                 ].contains(t.toLowerCase()))).toList();
-      } else if (filterLower == 'dairy' || filterLower.contains('dairy')) {
+      } else if (filterLower == 'dairy' ||
+          filterLower.contains('dairy') ||
+          filterLower == 'cat_dairy_bread') {
         list = list.where((p) =>
             p.category.toLowerCase().contains('dairy') ||
             p.tags.any((t) => [
@@ -127,18 +223,53 @@ class _CatalogScreenState extends ConsumerState<CatalogScreen> {
                   'doodh',
                 ].contains(t.toLowerCase()))).toList();
       } else {
-        list = list.where((p) {
-          return p.category.toLowerCase() == filterLower ||
-              p.category.toLowerCase().contains(filterLower) ||
-              filterLower.contains(p.category.toLowerCase()) ||
-              p.tags.any((t) => t.toLowerCase().contains(filterLower));
+        // Match against dynamic Firestore categories (by name or ID)
+        final matchedCategory = grocery.categories.where((c) {
+          final idLower = c.id.toLowerCase();
+          final nameLower = c.name.toLowerCase();
+          return idLower == filterLower ||
+              nameLower == filterLower ||
+              nameLower.contains(filterLower) ||
+              filterLower.contains(nameLower);
+        }).firstOrNull;
+
+        final targetName = matchedCategory?.name.toLowerCase() ?? filterLower;
+        final targetId = matchedCategory?.id.toLowerCase() ?? filterLower;
+
+        final matched = list.where((p) {
+          final pCat = p.category.toLowerCase();
+          final pSub = p.subcategory.toLowerCase();
+          return pCat == targetName ||
+              pCat == targetId ||
+              pCat == filterLower ||
+              pCat.contains(filterLower) ||
+              filterLower.contains(pCat) ||
+              pSub.contains(filterLower) ||
+              p.tags.any((t) =>
+                  t.toLowerCase() == filterLower ||
+                  t.toLowerCase().contains(filterLower) ||
+                  filterLower.contains(t.toLowerCase()));
         }).toList();
+
+        if (matched.isNotEmpty) {
+          list = matched;
+        }
       }
     }
 
     // Apply Catalog In-Page Search Query via SmartSearchEngine
     if (_searchQuery.trim().isNotEmpty) {
-      list = SmartSearchEngine.search(list, _searchQuery.trim());
+      final query = _searchQuery.trim();
+      final searched = SmartSearchEngine.search(list, query);
+      if (searched.isNotEmpty) {
+        list = searched;
+      } else {
+        // Fallback to global catalog search so user isn't shown empty page if category was too narrow
+        final global = SmartSearchEngine.search(grocery.products, query);
+        if (global.isNotEmpty) {
+          list = global;
+        }
+      }
     }
 
     // Apply Sorting
@@ -512,8 +643,7 @@ class _CatalogScreenState extends ConsumerState<CatalogScreen> {
   }
 
   Widget _buildCategoryFilterChip(String label, String filterKey) {
-    final isSelected =
-        _selectedCategoryFilter.toLowerCase() == filterKey.toLowerCase();
+    final isSelected = _isFilterActive(filterKey);
     return GestureDetector(
       onTap: () {
         setState(() {
