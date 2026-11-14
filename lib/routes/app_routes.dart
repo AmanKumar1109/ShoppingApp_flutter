@@ -15,6 +15,7 @@ import '../screens/onboarding/onboarding_screen.dart';
 import '../screens/orders/order_tracking_screen.dart';
 import '../screens/orders/orders_screen.dart';
 import '../screens/product_detail/product_detail_screen.dart';
+import '../screens/search/search_screen.dart';
 import '../screens/profile/complaints_screen.dart';
 import '../screens/profile/edit_profile_screen.dart';
 import '../screens/profile/help_support_screen.dart';
@@ -55,6 +56,7 @@ class AppRoutes {
   static const String cart = '/cart';
   static const String appUpdate = '/app-update';
   static const String orders = '/orders';
+  static const String search = '/search';
 
   static Map<String, WidgetBuilder> get routes => {
         splash: (context) => const SplashScreen(),
@@ -104,6 +106,13 @@ class AppRoutes {
 
         chat: (context) => const ChatScreen(),
         themeSettings: (context) => const ThemeSettingsScreen(),
+        search: (context) {
+          final args = ModalRoute.of(context)?.settings.arguments;
+          final initialQuery = args is String
+              ? args
+              : (args is Map ? args['query'] as String? : null);
+          return SearchScreen(initialQuery: initialQuery);
+        },
         catalog: (context) {
           final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>? ?? {};
           return CatalogScreen(

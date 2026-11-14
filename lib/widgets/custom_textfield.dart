@@ -3,6 +3,7 @@ import 'voice_search_bottom_sheet.dart';
 
 class CustomSearchField extends StatefulWidget {
   final TextEditingController? controller;
+  final FocusNode? focusNode;
   final ValueChanged<String>? onChanged;
   final ValueChanged<String>? onSubmitted;
   final VoidCallback? onClear;
@@ -15,6 +16,7 @@ class CustomSearchField extends StatefulWidget {
   const CustomSearchField({
     super.key,
     this.controller,
+    this.focusNode,
     this.onChanged,
     this.onSubmitted,
     this.onClear,
@@ -88,6 +90,7 @@ class _CustomSearchFieldState extends State<CustomSearchField> {
       ),
       child: TextField(
         controller: _effectiveController,
+        focusNode: widget.focusNode,
         readOnly: widget.readOnly,
         onTap: widget.onTap,
         onChanged: (val) {

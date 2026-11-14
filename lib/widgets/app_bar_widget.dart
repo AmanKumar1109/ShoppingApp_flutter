@@ -125,7 +125,7 @@ class HomeAppBarWidget extends ConsumerWidget implements PreferredSizeWidget {
                       barrierDismissible: true,
                       barrierLabel: 'Notifications',
                       barrierColor: Colors.black.withValues(alpha: 0.35),
-                      pageBuilder: (ctx, _, __) => const Align(
+                      pageBuilder: (ctx, _, _) => const Align(
                         alignment: Alignment.centerRight,
                         child: NotificationEndDrawer(),
                       ),

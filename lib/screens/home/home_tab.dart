@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/product_model.dart';
 import '../../providers/grocery_provider.dart';
 import '../../routes/app_routes.dart';
+import '../../utils/search_engine.dart';
 import '../../widgets/app_bar_widget.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_textfield.dart';
@@ -11,11 +12,200 @@ import '../../widgets/grocery_grand_deals_section.dart';
 import '../../widgets/promo_ad_banner_carousel.dart';
 import '../../widgets/skeleton_loader.dart';
 
-class HomeTab extends ConsumerWidget {
+class HomeTab extends ConsumerStatefulWidget {
   const HomeTab({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomeTab> createState() => _HomeTabState();
+}
+
+class _HomeTabState extends ConsumerState<HomeTab> {
+  final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
+  String _searchQuery = '';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _searchFocusNode.dispose();
+    super.dispose();
+  }
+
+  void _navigateToSearch(String query) {
+    final clean = query.trim();
+    if (clean.isEmpty) return;
+    _searchFocusNode.unfocus();
+    _searchController.clear();
+    setState(() {
+      _searchQuery = '';
+    });
+    Navigator.pushNamed(
+      context,
+      AppRoutes.search,
+      arguments: clean,
+    );
+  }
+
+  Widget _buildSuggestionsDropdown(
+    BuildContext context,
+    List<ProductModel> allProducts,
+  ) {
+    final suggestions =
+        SmartSearchEngine.getSuggestions(allProducts, _searchQuery);
+    final queryText = _searchQuery.trim();
+
+    return Padding(
+      padding: const EdgeInsets.only(left: 20, right: 20, top: 4, bottom: 8),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFE5E7EB)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.08),
+              blurRadius: 16,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Top Action: Search for exact query text
+              InkWell(
+                onTap: () => _navigateToSearch(queryText),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF7C415).withValues(alpha: 0.2),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.search_rounded,
+                          size: 16,
+                          color: Color(0xFF19251B),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: RichText(
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          text: TextSpan(
+                            text: 'Search for "',
+                            style: const TextStyle(
+                              fontSize: 13.5,
+                              color: Color(0xFF6B7280),
+                            ),
+                            children: [
+                              TextSpan(
+                                text: queryText,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  color: Color(0xFF19251B),
+                                ),
+                              ),
+                              const TextSpan(text: '"'),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const Icon(
+                        Icons.arrow_forward_ios_rounded,
+                        size: 13,
+                        color: Color(0xFF9CA3AF),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              if (suggestions.isNotEmpty)
+                const Divider(height: 1, color: Color(0xFFF3F4F6)),
+
+              // Closest Suggestions list
+              ...suggestions.take(5).map((sugg) {
+                return InkWell(
+                  onTap: () => _navigateToSearch(sugg.text),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          sugg.isProduct
+                              ? Icons.shopping_bag_outlined
+                              : Icons.category_outlined,
+                          size: 16,
+                          color: const Color(0xFF9CA3AF),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            sugg.text,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF1F2937),
+                            ),
+                          ),
+                        ),
+                        if (sugg.category != null &&
+                            sugg.category!.isNotEmpty) ...[
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF3F4F6),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              sugg.category!,
+                              style: const TextStyle(
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF6B7280),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                        ],
+                        const Icon(
+                          Icons.north_west_rounded,
+                          size: 13,
+                          color: Color(0xFFD1D5DB),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final grocery = ref.watch(groceryProvider);
 
     // If initial loading from Firestore is in progress -> Show Skeleton Screen
@@ -23,9 +213,7 @@ class HomeTab extends ConsumerWidget {
       return const HomeSkeletonScreen();
     }
 
-    final isCategoryFiltered =
-        grocery.selectedCategory != 'all' ||
-        grocery.searchQuery.trim().isNotEmpty;
+    final isCategoryFiltered = grocery.selectedCategory != 'all';
     final activeSubcategories = grocery.activeCategorySubcategories;
     final filteredList = grocery.filteredProducts;
     final displayedProducts = filteredList
@@ -98,38 +286,27 @@ class HomeTab extends ConsumerWidget {
                     vertical: 4,
                   ),
                   child: CustomSearchField(
-                    hintText: 'Search "surf", "milk", "brownie", "atta"...',
+                    controller: _searchController,
+                    focusNode: _searchFocusNode,
+                    hintText: 'Search "rice", "milk", "atta", "oil"...',
                     onChanged: (query) {
-                      grocery.setSearchQuery(query);
+                      setState(() {
+                        _searchQuery = query;
+                      });
                     },
-                    onSubmitted: (query) {
-                      if (query.trim().isNotEmpty) {
-                        Navigator.pushNamed(
-                          context,
-                          AppRoutes.catalog,
-                          arguments: {
-                            'title': 'Search: "$query"',
-                            'sectionType': 'all',
-                            'searchTerm': query.trim(),
-                          },
-                        );
-                      }
-                    },
-                    onVoiceResult: (query) {
-                      if (query.trim().isNotEmpty) {
-                        Navigator.pushNamed(
-                          context,
-                          AppRoutes.catalog,
-                          arguments: {
-                            'title': 'Search: "$query"',
-                            'sectionType': 'all',
-                            'searchTerm': query.trim(),
-                          },
-                        );
-                      }
+                    onSubmitted: (query) => _navigateToSearch(query),
+                    onVoiceResult: (query) => _navigateToSearch(query),
+                    onClear: () {
+                      setState(() {
+                        _searchQuery = '';
+                      });
                     },
                   ),
                 ),
+
+                // Live Suggestions Dropdown
+                if (_searchQuery.trim().isNotEmpty)
+                  _buildSuggestionsDropdown(context, grocery.products),
 
                 // If App Orders are Paused -> Show Announcement Banner
                 if (!grocery.isAppAcceptingOrders)
