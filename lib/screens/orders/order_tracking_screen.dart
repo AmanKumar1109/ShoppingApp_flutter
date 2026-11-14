@@ -65,6 +65,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
               setState(() => _isCancelling = true);
               final success = await _firestoreService.cancelOrder(
                 order.orderId,
+                userId: order.userId,
               );
               setState(() => _isCancelling = false);
 

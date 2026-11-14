@@ -1,7 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import '../models/category_model.dart';
 import '../models/complaint_model.dart';
+import '../models/notification_model.dart';
 import '../models/order_model.dart';
 import '../models/product_model.dart';
 import 'notification_service.dart';
@@ -244,13 +246,34 @@ class FirestoreService {
     }
   }
 
-  Future<bool> cancelOrder(String orderId) async {
+  Future<bool> cancelOrder(String orderId, {String? userId}) async {
     try {
       await _firestore.collection('orders').doc(orderId).update({
         'status': 'Cancelled',
         'isCurrent': false,
         'updatedAt': FieldValue.serverTimestamp(),
       });
+
+      final targetUid = userId ?? FirebaseAuth.instance.currentUser?.uid;
+      if (targetUid != null && targetUid.isNotEmpty) {
+        final notifDocId = 'order_${orderId}_cancelled';
+        await _firestore
+            .collection('users')
+            .doc(targetUid)
+            .collection('notifications')
+            .doc(notifDocId)
+            .set({
+          'title': '⚠️ Order Cancelled',
+          'body':
+              'Your order #$orderId has been cancelled. Any prepaid amount will be refunded to your source payment method.',
+          'type': 'order',
+          'orderId': orderId,
+          'status': 'Cancelled',
+          'route': '/orders',
+          'isRead': false,
+          'createdAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
+      }
       return true;
     } catch (e) {
       debugPrint('Error cancelling order: $e');
@@ -432,6 +455,112 @@ class FirestoreService {
     } catch (e) {
       debugPrint('Firestore fetchCoupon error: $e');
       return null;
+    }
+  }
+
+  // 11. Stream Broadcast Notifications (Admin Campaigns sent from Admin Dashboard)
+  Stream<List<NotificationModel>> streamBroadcastNotifications() {
+    return _firestore
+        .collection('broadcast_notifications')
+        .orderBy('createdAt', descending: true)
+        .limit(30)
+        .snapshots()
+        .map((snapshot) {
+          return snapshot.docs
+              .map(
+                (doc) => NotificationModel.fromFirestore(
+                  doc.data(),
+                  doc.id,
+                  isPersonal: false,
+                ),
+              )
+              .toList();
+        })
+        .handleError((error) {
+          debugPrint('Error streaming broadcast notifications: $error');
+          return <NotificationModel>[];
+        });
+  }
+
+  // 12. Stream Personal Notifications for logged-in customer (Order updates, cancellations, referral rewards)
+  Stream<List<NotificationModel>> streamUserNotifications(String userId) {
+    if (userId.trim().isEmpty) return Stream.value([]);
+    return _firestore
+        .collection('users')
+        .doc(userId.trim())
+        .collection('notifications')
+        .orderBy('createdAt', descending: true)
+        .limit(40)
+        .snapshots()
+        .map((snapshot) {
+          return snapshot.docs
+              .map(
+                (doc) => NotificationModel.fromFirestore(
+                  doc.data(),
+                  doc.id,
+                  isPersonal: true,
+                ),
+              )
+              .toList();
+        })
+        .handleError((error) {
+          debugPrint('Error streaming user notifications: $error');
+          return <NotificationModel>[];
+        });
+  }
+
+  // 13. Delete / Dismiss a User Notification from Firestore
+  Future<void> deleteUserNotification(
+    String userId,
+    String notificationId,
+  ) async {
+    if (userId.trim().isEmpty || notificationId.trim().isEmpty) return;
+    try {
+      await _firestore
+          .collection('users')
+          .doc(userId.trim())
+          .collection('notifications')
+          .doc(notificationId.trim())
+          .delete();
+    } catch (e) {
+      debugPrint('Error deleting user notification: $e');
+    }
+  }
+
+  // 14. Mark a User Notification as Read in Firestore
+  Future<void> markUserNotificationAsRead(
+    String userId,
+    String notificationId,
+  ) async {
+    if (userId.trim().isEmpty || notificationId.trim().isEmpty) return;
+    try {
+      await _firestore
+          .collection('users')
+          .doc(userId.trim())
+          .collection('notifications')
+          .doc(notificationId.trim())
+          .update({'isRead': true});
+    } catch (e) {
+      debugPrint('Error marking notification as read: $e');
+    }
+  }
+
+  // 15. Clear all Personal Notifications for a user
+  Future<void> clearAllUserNotifications(String userId) async {
+    if (userId.trim().isEmpty) return;
+    try {
+      final snap = await _firestore
+          .collection('users')
+          .doc(userId.trim())
+          .collection('notifications')
+          .get();
+      final batch = _firestore.batch();
+      for (final doc in snap.docs) {
+        batch.delete(doc.reference);
+      }
+      await batch.commit();
+    } catch (e) {
+      debugPrint('Error clearing all user notifications: $e');
     }
   }
 }

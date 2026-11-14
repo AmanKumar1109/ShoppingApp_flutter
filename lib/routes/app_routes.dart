@@ -13,6 +13,7 @@ import '../screens/checkout/order_success_screen.dart';
 import '../screens/home/home_screen.dart';
 import '../screens/onboarding/onboarding_screen.dart';
 import '../screens/orders/order_tracking_screen.dart';
+import '../screens/orders/orders_screen.dart';
 import '../screens/product_detail/product_detail_screen.dart';
 import '../screens/profile/complaints_screen.dart';
 import '../screens/profile/edit_profile_screen.dart';
@@ -53,6 +54,7 @@ class AppRoutes {
   static const String catalog = '/catalog';
   static const String cart = '/cart';
   static const String appUpdate = '/app-update';
+  static const String orders = '/orders';
 
   static Map<String, WidgetBuilder> get routes => {
         splash: (context) => const SplashScreen(),
@@ -82,6 +84,7 @@ class AppRoutes {
             ),
         checkout: (context) => const CheckoutScreen(),
         orderSuccess: (context) => const OrderSuccessScreen(),
+        orders: (context) => const OrdersScreen(),
         orderTracking: (context) => const OrderTrackingScreen(),
         productDetail: (context) {
           final args = ModalRoute.of(context)?.settings.arguments;

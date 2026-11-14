@@ -247,8 +247,13 @@ class NotificationService {
             data['type'] == 'abandoned_cart') {
           navState.pushNamed(AppRoutes.cart);
         } else if (routeStr == '/orders' ||
+            routeStr == AppRoutes.orders ||
             data['type'] == 'order_status') {
-          navState.pushNamed(AppRoutes.home);
+          navState.pushNamed(AppRoutes.orders);
+        } else if (routeStr == '/coupons' ||
+            routeStr == AppRoutes.referEarn ||
+            data['type'] == 'referral') {
+          navState.pushNamed(AppRoutes.referEarn);
         } else if (routeStr == AppRoutes.chat || routeStr == '/chat') {
           navState.pushNamed(AppRoutes.chat);
         } else if (routeStr == AppRoutes.complaints ||

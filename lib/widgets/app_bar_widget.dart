@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/user_model.dart';
 import '../providers/auth_provider.dart';
+import '../providers/notification_provider.dart';
 
 class HomeAppBarWidget extends ConsumerWidget implements PreferredSizeWidget {
   const HomeAppBarWidget({super.key});
@@ -109,6 +110,9 @@ class HomeAppBarWidget extends ConsumerWidget implements PreferredSizeWidget {
           // Bell Notification Button
           Builder(
             builder: (context) {
+              final notifState = ref.watch(notificationProvider);
+              final unreadCount = notifState.unreadCount;
+
               return GestureDetector(
                 onTap: () {
                   Scaffold.of(context).openEndDrawer();
@@ -128,6 +132,7 @@ class HomeAppBarWidget extends ConsumerWidget implements PreferredSizeWidget {
                     ],
                   ),
                   child: Stack(
+                    clipBehavior: Clip.none,
                     children: [
                       const Center(
                         child: Icon(
@@ -136,18 +141,34 @@ class HomeAppBarWidget extends ConsumerWidget implements PreferredSizeWidget {
                           size: 22,
                         ),
                       ),
-                      Positioned(
-                        right: 11,
-                        top: 11,
-                        child: Container(
-                          width: 8,
-                          height: 8,
-                          decoration: const BoxDecoration(
-                            color: Color(0xFFF7C415),
-                            shape: BoxShape.circle,
+                      if (unreadCount > 0)
+                        Positioned(
+                          right: 6,
+                          top: 6,
+                          child: Container(
+                            padding: const EdgeInsets.all(2),
+                            constraints: const BoxConstraints(
+                              minWidth: 15,
+                              minHeight: 15,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF7C415),
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.white, width: 1.5),
+                            ),
+                            child: Center(
+                              child: Text(
+                                unreadCount > 9 ? '9+' : '$unreadCount',
+                                style: const TextStyle(
+                                  color: Color(0xFF19251B),
+                                  fontSize: 8.5,
+                                  fontWeight: FontWeight.w900,
+                                  height: 1.0,
+                                ),
+                              ),
+                            ),
                           ),
                         ),
-                      ),
                     ],
                   ),
                 ),
