@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -56,6 +57,26 @@ class GroceryProvider extends ChangeNotifier {
   bool get isForceUpdateEnabled => _isForceUpdateEnabled;
   String get appUpdateUrl => _appUpdateUrl;
   String get appUpdateMessage => _appUpdateMessage;
+
+  // Referral Campaign Dynamic Settings
+  bool _referralCampaignActive = true;
+  double _referralMinOrderValue = 299.0;
+  double _referralCouponMinOrderValue = 100.0;
+  int _referralCouponValidityDays = 30;
+  double _referrerRewardAmount = 30.0;
+  double _referredUserRewardAmount = 30.0;
+  String _referralBannerTitle = 'Refer Friends, Earn Rewards!';
+  String _referralBannerDescription =
+      'Invite friends to The Grocery Hub! After their first order is delivered, BOTH of you earn exciting reward coupons!';
+
+  bool get isReferralCampaignActive => _referralCampaignActive;
+  double get referralMinOrderValue => _referralMinOrderValue;
+  double get referralCouponMinOrderValue => _referralCouponMinOrderValue;
+  int get referralCouponValidityDays => _referralCouponValidityDays;
+  double get referrerRewardAmount => _referrerRewardAmount;
+  double get referredUserRewardAmount => _referredUserRewardAmount;
+  String get referralBannerTitle => _referralBannerTitle;
+  String get referralBannerDescription => _referralBannerDescription;
 
   bool get isAppOutdated {
     if (!_isForceUpdateEnabled) return false;
@@ -302,6 +323,39 @@ class GroceryProvider extends ChangeNotifier {
         final updateMsg = (settings['appUpdateMessage'] as String?)?.trim();
         if (updateMsg != null && updateMsg.isNotEmpty) {
           _appUpdateMessage = updateMsg;
+        }
+
+        // Sync Dynamic Referral Campaign Settings
+        if (settings['referralCampaignActive'] != null) {
+          _referralCampaignActive = settings['referralCampaignActive'] as bool;
+        }
+        if (settings['referralMinOrderValue'] != null) {
+          _referralMinOrderValue =
+              (settings['referralMinOrderValue'] as num).toDouble();
+        }
+        if (settings['referralCouponMinOrderValue'] != null) {
+          _referralCouponMinOrderValue =
+              (settings['referralCouponMinOrderValue'] as num).toDouble();
+        }
+        if (settings['referralCouponValidityDays'] != null) {
+          _referralCouponValidityDays =
+              (settings['referralCouponValidityDays'] as num).toInt();
+        }
+        if (settings['referrerRewardAmount'] != null) {
+          _referrerRewardAmount =
+              (settings['referrerRewardAmount'] as num).toDouble();
+        }
+        if (settings['referredUserRewardAmount'] != null) {
+          _referredUserRewardAmount =
+              (settings['referredUserRewardAmount'] as num).toDouble();
+        }
+        if ((settings['referralBannerTitle'] as String?)?.isNotEmpty == true) {
+          _referralBannerTitle = settings['referralBannerTitle'] as String;
+        }
+        if ((settings['referralBannerDescription'] as String?)?.isNotEmpty ==
+            true) {
+          _referralBannerDescription =
+              settings['referralBannerDescription'] as String;
         }
 
         notifyListeners();
@@ -637,6 +691,7 @@ class GroceryProvider extends ChangeNotifier {
 
   // Coupon & Checkout State
   String? _appliedCouponCode;
+  String? _appliedCouponUserId;
   double _couponDiscount = 0.0;
   String? _couponError;
 
@@ -703,6 +758,7 @@ class GroceryProvider extends ChangeNotifier {
   void clearCart() {
     _cartItems.clear();
     _appliedCouponCode = null;
+    _appliedCouponUserId = null;
     _couponDiscount = 0.0;
     _couponError = null;
     _persistCartToStorage();
@@ -762,11 +818,111 @@ class GroceryProvider extends ChangeNotifier {
     return total > 0 ? total : 0.0;
   }
 
-  // Coupon Application
-  bool applyCoupon(String code) {
+  // Coupon Application (Supports Firestore Dynamic & Referral Coupons + Legacy fallback)
+  Future<bool> applyCoupon(String code, {String? userId}) async {
     final cleanCode = code.trim().toUpperCase();
     _couponError = null;
 
+    if (cartTotalAmount <= 0) {
+      _couponError = 'Your cart is empty';
+      notifyListeners();
+      return false;
+    }
+
+    try {
+      // 1. Check dynamic coupon from Firestore (Admin generated or Referral Reward Coupons)
+      final couponDoc = await _firestoreService.fetchCoupon(cleanCode);
+      if (couponDoc != null) {
+        final bool isActive = couponDoc['isActive'] as bool? ?? true;
+        if (!isActive) {
+          _couponError = 'This coupon is no longer active';
+          notifyListeners();
+          return false;
+        }
+
+        // Check user restriction (for referral coupons locked to specific user)
+        final String? couponUser = couponDoc['userId'] as String?;
+        if (couponUser != null && couponUser.trim().isNotEmpty) {
+          if (userId == null || userId.trim() != couponUser.trim()) {
+            _couponError =
+                'This coupon is exclusive to its registered recipient';
+            notifyListeners();
+            return false;
+          }
+        }
+
+        // Check validity date
+        final dynamic rawExpiry = couponDoc['validUntil'];
+        if (rawExpiry != null) {
+          DateTime? expiryDate;
+          if (rawExpiry is Timestamp) {
+            expiryDate = rawExpiry.toDate();
+          } else if (rawExpiry is String && rawExpiry.isNotEmpty) {
+            expiryDate = DateTime.tryParse(rawExpiry);
+          }
+          if (expiryDate != null && DateTime.now().isAfter(expiryDate)) {
+            _couponError = 'This coupon has expired';
+            notifyListeners();
+            return false;
+          }
+        }
+
+        // Check minimum order value
+        final double minOrder =
+            ((couponDoc['minOrderValue'] ?? 0) as num).toDouble();
+        if (cartTotalAmount < minOrder) {
+          _couponError =
+              'Minimum cart value of ₹${minOrder.toInt()} required for this coupon';
+          notifyListeners();
+          return false;
+        }
+
+        // Check usage limits if specified
+        final int maxUses = ((couponDoc['maxUses'] ?? 0) as num).toInt();
+        final int usedCount = ((couponDoc['usedCount'] ?? 0) as num).toInt();
+        if (maxUses > 0 && usedCount >= maxUses) {
+          _couponError = 'This coupon has already been redeemed';
+          notifyListeners();
+          return false;
+        }
+
+        // Calculate discount
+        final String discountType =
+            (couponDoc['discountType'] ?? couponDoc['type'] ?? 'flat')
+                .toString()
+                .toLowerCase();
+        final double discountValue =
+            ((couponDoc['discountValue'] ?? couponDoc['discount'] ?? 0) as num)
+                .toDouble();
+        final double maxDiscount =
+            ((couponDoc['maxDiscount'] ?? 0) as num).toDouble();
+
+        double discount = 0.0;
+        if (discountType == 'percentage') {
+          discount = (cartTotalAmount * (discountValue / 100)).roundToDouble();
+          if (maxDiscount > 0 && discount > maxDiscount) {
+            discount = maxDiscount;
+          }
+        } else {
+          // Flat discount
+          discount = discountValue;
+        }
+
+        if (discount > cartTotalAmount) {
+          discount = cartTotalAmount;
+        }
+
+        _appliedCouponCode = cleanCode;
+        _appliedCouponUserId = userId;
+        _couponDiscount = discount;
+        notifyListeners();
+        return true;
+      }
+    } catch (e) {
+      debugPrint('Error verifying coupon from Firestore: $e');
+    }
+
+    // 2. Fallback to Legacy Static Coupon Codes
     if (cartTotalAmount < 100.0) {
       _couponError = 'Minimum order value of ₹100 required for coupons';
       notifyListeners();
@@ -780,6 +936,7 @@ class GroceryProvider extends ChangeNotifier {
         return false;
       }
       _appliedCouponCode = 'FRESH100';
+      _appliedCouponUserId = null;
       _couponDiscount = 100.0;
     } else if (cleanCode == 'GROCERY50') {
       if (cartTotalAmount < 199.0) {
@@ -788,15 +945,15 @@ class GroceryProvider extends ChangeNotifier {
         return false;
       }
       _appliedCouponCode = 'GROCERY50';
+      _appliedCouponUserId = null;
       _couponDiscount = 50.0;
     } else if (cleanCode == 'WELCOME') {
       _appliedCouponCode = 'WELCOME';
-      _couponDiscount = (cartTotalAmount * 0.15).roundToDouble().clamp(
-        0.0,
-        75.0,
-      );
+      _appliedCouponUserId = null;
+      _couponDiscount =
+          (cartTotalAmount * 0.15).roundToDouble().clamp(0.0, 75.0);
     } else {
-      _couponError = 'Invalid coupon code. Try FRESH100 or GROCERY50';
+      _couponError = 'Invalid coupon code. Please check and try again.';
       notifyListeners();
       return false;
     }
@@ -807,6 +964,7 @@ class GroceryProvider extends ChangeNotifier {
 
   void removeCoupon() {
     _appliedCouponCode = null;
+    _appliedCouponUserId = null;
     _couponDiscount = 0.0;
     _couponError = null;
     notifyListeners();
@@ -814,7 +972,7 @@ class GroceryProvider extends ChangeNotifier {
 
   void _recalculateCoupon() {
     if (_appliedCouponCode != null) {
-      applyCoupon(_appliedCouponCode!);
+      applyCoupon(_appliedCouponCode!, userId: _appliedCouponUserId);
     }
   }
 }

@@ -455,81 +455,180 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   }
 
   void _showAvailableCouponsSheet(GroceryProvider grocery) {
+    final auth = ref.read(authProvider);
+    final userId = auth.user?.uid;
+
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (ctx) {
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        return DraggableScrollableSheet(
+          initialChildSize: 0.65,
+          minChildSize: 0.4,
+          maxChildSize: 0.85,
+          expand: false,
+          builder: (sheetCtx, scrollController) {
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+              child: ListView(
+                controller: scrollController,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Available Offers & Coupons',
-                        style: TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w900,
-                          color: Color(0xFF19251B),
-                        ),
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(2),
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        'Tap "APPLY" to get instant discounts',
-                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Available Offers & Coupons',
+                            style: TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.w900,
+                              color: Color(0xFF19251B),
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Tap "APPLY" to get instant discounts',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                        ],
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close_rounded, size: 20),
+                        onPressed: () => Navigator.pop(ctx),
                       ),
                     ],
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.close_rounded, size: 20),
-                    onPressed: () => Navigator.pop(ctx),
+                  const SizedBox(height: 14),
+
+                  // 1. Referral & Personal Reward Coupons (if logged in)
+                  if (userId != null && userId.isNotEmpty) ...[
+                    StreamBuilder<List<Map<String, dynamic>>>(
+                      stream: _firestoreService.streamUserCoupons(userId),
+                      builder: (context, snapshot) {
+                        final coupons = (snapshot.data ?? [])
+                            .where((c) => c['isActive'] != false)
+                            .toList();
+
+                        if (coupons.isEmpty) return const SizedBox.shrink();
+
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: const [
+                                Icon(
+                                  Icons.card_giftcard_rounded,
+                                  size: 16,
+                                  color: Color(0xFF16A34A),
+                                ),
+                                SizedBox(width: 6),
+                                Text(
+                                  'Your Referral Rewards',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w800,
+                                    color: Color(0xFF16A34A),
+                                    letterSpacing: 0.2,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 10),
+                            ...coupons.map((coupon) {
+                              final code = coupon['code'] as String? ?? '';
+                              final discount = coupon['discountAmount'] ?? 0;
+                              final minOrder = coupon['minOrderValue'] ?? 0;
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 10),
+                                child: _buildCouponItem(
+                                  code: code,
+                                  title: 'Flat ₹$discount OFF on your order',
+                                  minOrderText: (minOrder is num && minOrder > 0)
+                                      ? 'Min. cart value ₹$minOrder'
+                                      : 'No minimum order required',
+                                  grocery: grocery,
+                                  badgeText: 'REFERRAL REWARD',
+                                  badgeColor: const Color(0xFF16A34A),
+                                  userId: userId,
+                                ),
+                              );
+                            }),
+                            const SizedBox(height: 10),
+                            const Divider(height: 20, color: Color(0xFFF1F5F9)),
+                          ],
+                        );
+                      },
+                    ),
+                  ],
+
+                  // 2. Standard Store Offers
+                  Row(
+                    children: const [
+                      Icon(
+                        Icons.local_offer_outlined,
+                        size: 15,
+                        color: Color(0xFF4B5563),
+                      ),
+                      SizedBox(width: 6),
+                      Text(
+                        'Store Offers',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF4B5563),
+                        ),
+                      ),
+                    ],
                   ),
+                  const SizedBox(height: 10),
+                  _buildCouponItem(
+                    code: 'FRESH100',
+                    title: 'Get ₹100 OFF on order above ₹399',
+                    minOrderText: 'Min. cart value ₹399',
+                    grocery: grocery,
+                    userId: userId,
+                  ),
+                  const SizedBox(height: 10),
+                  _buildCouponItem(
+                    code: 'GROCERY50',
+                    title: 'Get ₹50 OFF on order above ₹199',
+                    minOrderText: 'Min. cart value ₹199',
+                    grocery: grocery,
+                    userId: userId,
+                  ),
+                  const SizedBox(height: 10),
+                  _buildCouponItem(
+                    code: 'WELCOME',
+                    title: 'Flat 15% OFF for new customers',
+                    minOrderText: 'Max discount up to ₹75',
+                    grocery: grocery,
+                    userId: userId,
+                  ),
+                  const SizedBox(height: 16),
                 ],
               ),
-              const SizedBox(height: 14),
-              _buildCouponItem(
-                code: 'FRESH100',
-                title: 'Get ₹100 OFF on order above ₹399',
-                minOrderText: 'Min. cart value ₹399',
-                grocery: grocery,
-              ),
-              const SizedBox(height: 10),
-              _buildCouponItem(
-                code: 'GROCERY50',
-                title: 'Get ₹50 OFF on order above ₹199',
-                minOrderText: 'Min. cart value ₹199',
-                grocery: grocery,
-              ),
-              const SizedBox(height: 10),
-              _buildCouponItem(
-                code: 'WELCOME',
-                title: 'Flat 15% OFF for new customers',
-                minOrderText: 'Max discount up to ₹75',
-                grocery: grocery,
-              ),
-              const SizedBox(height: 12),
-            ],
-          ),
+            );
+          },
         );
       },
     );
@@ -540,6 +639,9 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     required String title,
     required String minOrderText,
     required GroceryProvider grocery,
+    String? badgeText,
+    Color? badgeColor,
+    String? userId,
   }) {
     final isApplied = grocery.appliedCouponCode == code;
 
@@ -575,6 +677,29 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                if (badgeText != null) ...[
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
+                    margin: const EdgeInsets.only(bottom: 3),
+                    decoration: BoxDecoration(
+                      color: (badgeColor ?? const Color(0xFF19251B))
+                          .withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      badgeText,
+                      style: TextStyle(
+                        fontSize: 9.5,
+                        fontWeight: FontWeight.w800,
+                        color: badgeColor ?? const Color(0xFF19251B),
+                        letterSpacing: 0.3,
+                      ),
+                    ),
+                  ),
+                ],
                 Text(
                   title,
                   style: const TextStyle(
@@ -602,7 +727,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                 grocery.removeCoupon();
               } else {
                 _couponController.text = code;
-                grocery.applyCoupon(code);
+                grocery.applyCoupon(code, userId: userId);
               }
             },
             style: ElevatedButton.styleFrom(
@@ -1978,7 +2103,11 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                   child: ElevatedButton(
                     onPressed: () {
                       if (_couponController.text.trim().isNotEmpty) {
-                        grocery.applyCoupon(_couponController.text.trim());
+                        final auth = ref.read(authProvider);
+                        grocery.applyCoupon(
+                          _couponController.text.trim(),
+                          userId: auth.user?.uid,
+                        );
                       }
                     },
                     style: ElevatedButton.styleFrom(

@@ -359,4 +359,79 @@ class FirestoreService {
       debugPrint('Error enqueuing order mail: $e');
     }
   }
+
+  // 8. Real-time Stream of User's Referrals (Friends invited and their status)
+  Stream<List<Map<String, dynamic>>> streamUserReferrals(String userId) {
+    if (userId.trim().isEmpty) return Stream.value([]);
+    return _firestore
+        .collection('referrals')
+        .where('referrerId', isEqualTo: userId.trim())
+        .snapshots()
+        .map((snapshot) {
+          final list = snapshot.docs
+              .map((doc) => {'id': doc.id, ...doc.data()})
+              .toList();
+          list.sort((a, b) {
+            final tA = a['createdAt'] is Timestamp
+                ? (a['createdAt'] as Timestamp).toDate()
+                : DateTime.fromMillisecondsSinceEpoch(0);
+            final tB = b['createdAt'] is Timestamp
+                ? (b['createdAt'] as Timestamp).toDate()
+                : DateTime.fromMillisecondsSinceEpoch(0);
+            return tB.compareTo(tA);
+          });
+          return list;
+        })
+        .handleError((error) {
+          debugPrint('Firestore User Referrals stream error: $error');
+          return <Map<String, dynamic>>[];
+        });
+  }
+
+  // 9. Real-time Stream of User's Earned Reward Coupons
+  Stream<List<Map<String, dynamic>>> streamUserCoupons(String userId) {
+    if (userId.trim().isEmpty) return Stream.value([]);
+    return _firestore
+        .collection('coupons')
+        .where('userId', isEqualTo: userId.trim())
+        .where('isActive', isEqualTo: true)
+        .snapshots()
+        .map((snapshot) {
+          return snapshot.docs
+              .map((doc) => {'id': doc.id, ...doc.data()})
+              .toList();
+        })
+        .handleError((error) {
+          debugPrint('Firestore User Coupons stream error: $error');
+          return <Map<String, dynamic>>[];
+        });
+  }
+
+  // 10. Fetch Single Coupon By Code for Verification & Checkout Application
+  Future<Map<String, dynamic>?> fetchCoupon(String code) async {
+    final cleanCode = code.trim().toUpperCase();
+    if (cleanCode.isEmpty) return null;
+    try {
+      // First check document ID directly
+      final directDoc =
+          await _firestore.collection('coupons').doc(cleanCode).get();
+      if (directDoc.exists && directDoc.data() != null) {
+        return {'id': directDoc.id, ...directDoc.data()!};
+      }
+      // Query by 'code' field
+      final querySnap = await _firestore
+          .collection('coupons')
+          .where('code', isEqualTo: cleanCode)
+          .limit(1)
+          .get();
+      if (querySnap.docs.isNotEmpty) {
+        final doc = querySnap.docs.first;
+        return {'id': doc.id, ...doc.data()};
+      }
+      return null;
+    } catch (e) {
+      debugPrint('Firestore fetchCoupon error: $e');
+      return null;
+    }
+  }
 }
