@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/grocery_provider.dart';
 import '../../routes/app_routes.dart';
 import '../../widgets/custom_textfield.dart';
+import '../../widgets/fast_cached_image.dart';
 
 class CategoriesScreen extends ConsumerWidget {
   final VoidCallback? onSelectCategory;
@@ -41,13 +42,13 @@ class CategoriesScreen extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Row(
+                    Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
+                            const Text(
                               'Explore All Categories',
                               style: TextStyle(
                                 fontSize: 18,
@@ -55,10 +56,10 @@ class CategoriesScreen extends ConsumerWidget {
                                 color: Color(0xFF19251B),
                               ),
                             ),
-                            SizedBox(height: 2),
+                            const SizedBox(height: 2),
                             Text(
-                              'Fresh groceries delivered in 10 mins',
-                              style: TextStyle(
+                              '${categories.length} Categories • Delivered in 10 mins',
+                              style: const TextStyle(
                                 fontSize: 12,
                                 color: Color(0xFF555555),
                                 fontWeight: FontWeight.w500,
@@ -66,7 +67,7 @@ class CategoriesScreen extends ConsumerWidget {
                             ),
                           ],
                         ),
-                        CircleAvatar(
+                        const CircleAvatar(
                           backgroundColor: Color(0xFF19251B),
                           child: Icon(
                             Icons.category_rounded,
@@ -115,91 +116,160 @@ class CategoriesScreen extends ConsumerWidget {
             ),
           ),
 
-          const SizedBox(height: 8),
+          const SizedBox(height: 4),
 
-          // Categories Grid
+          // Categories Grid with Real Cover Images & Badges
           Expanded(
-            child: GridView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                childAspectRatio: 0.76,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 16,
-              ),
-              itemCount: categories.length,
-              itemBuilder: (context, index) {
-                final category = categories[index];
-                return GestureDetector(
-                  onTap: () {
-                    ref.read(groceryProvider).selectCategory(category.id);
-                    if (onSelectCategory != null) {
-                      onSelectCategory!();
-                    } else {
-                      Navigator.pop(context);
-                    }
-                  },
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF9FAFB),
-                      borderRadius: BorderRadius.circular(18),
-                      border: Border.all(color: const Color(0xFFEEEEEE)),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.03),
-                          blurRadius: 6,
-                          offset: const Offset(0, 3),
-                        ),
-                      ],
+            child: categories.isEmpty
+                ? const Center(
+                    child: CircularProgressIndicator(
+                      color: Color(0xFF19251B),
                     ),
-                    padding: const EdgeInsets.all(10),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          width: 52,
-                          height: 52,
-                          decoration: const BoxDecoration(
-                            color: Color(0xFFFFF4B8),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Center(
-                            child: Icon(
-                              category.iconData,
-                              size: 26,
-                              color: const Color(0xFF19251B),
+                  )
+                : GridView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 3,
+                      childAspectRatio: 0.72,
+                      crossAxisSpacing: 10,
+                      mainAxisSpacing: 14,
+                    ),
+                    itemCount: categories.length,
+                    itemBuilder: (context, index) {
+                      final category = categories[index];
+                      final hasImage = category.imageUrl != null &&
+                          category.imageUrl!.trim().isNotEmpty;
+
+                      return GestureDetector(
+                        onTap: () {
+                          ref.read(groceryProvider).selectCategory(category.id);
+                          if (onSelectCategory != null) {
+                            onSelectCategory!();
+                          } else {
+                            Navigator.pop(context);
+                          }
+                        },
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: const Color(0xFFF0F2F5),
+                              width: 1.2,
                             ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.03),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Stack(
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 8,
+                                ),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    // Category Cover Image
+                                    Container(
+                                      width: 60,
+                                      height: 60,
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFFFF9E5),
+                                        borderRadius: BorderRadius.circular(15),
+                                        border: Border.all(
+                                          color: const Color(0xFFFFF0B3),
+                                          width: 1,
+                                        ),
+                                      ),
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(14),
+                                        child: hasImage
+                                            ? FastCachedImage(
+                                                imageUrl: category.imageUrl!.trim(),
+                                                width: 60,
+                                                height: 60,
+                                                fit: BoxFit.cover,
+                                                errorWidget: Center(
+                                                  child: Icon(
+                                                    category.iconData,
+                                                    size: 26,
+                                                    color: const Color(0xFF19251B),
+                                                  ),
+                                                ),
+                                              )
+                                            : Center(
+                                                child: Icon(
+                                                  category.iconData,
+                                                  size: 26,
+                                                  color: const Color(0xFF19251B),
+                                                ),
+                                              ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      category.name,
+                                      textAlign: TextAlign.center,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w700,
+                                        color: Color(0xFF19251B),
+                                        height: 1.15,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      category.itemCount,
+                                      textAlign: TextAlign.center,
+                                      style: const TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w600,
+                                        color: Color(0xFF007A3D),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              // Optional Dynamic Tag Badge (e.g. HOT, NEW, SALE)
+                              if (category.tag != null &&
+                                  category.tag!.trim().isNotEmpty)
+                                Positioned(
+                                  top: 5,
+                                  right: 5,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 5,
+                                      vertical: 2,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFF7C415),
+                                      borderRadius: BorderRadius.circular(5),
+                                    ),
+                                    child: Text(
+                                      category.tag!.trim().toUpperCase(),
+                                      style: const TextStyle(
+                                        fontSize: 8,
+                                        fontWeight: FontWeight.w900,
+                                        color: Color(0xFF19251B),
+                                        letterSpacing: 0.3,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                            ],
                           ),
                         ),
-                        const SizedBox(height: 10),
-                        Text(
-                          category.name,
-                          textAlign: TextAlign.center,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF19251B),
-                            height: 1.15,
-                          ),
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          category.itemCount,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w500,
-                            color: Color(0xFFB88600),
-                          ),
-                        ),
-                      ],
-                    ),
+                      );
+                    },
                   ),
-                );
-              },
-            ),
           ),
         ],
       ),

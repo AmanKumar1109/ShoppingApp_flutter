@@ -248,6 +248,10 @@ class GroceryProvider extends ChangeNotifier {
         if (docId.isNotEmpty) {
           map[docId] = c;
         }
+        final title = (c['title'] ?? '').toString().trim().toLowerCase();
+        if (title.isNotEmpty) {
+          map[title] = c;
+        }
       }
       _categoryCoversMap = map;
       _recalculateCategoryAggregations();
@@ -328,6 +332,19 @@ class GroceryProvider extends ChangeNotifier {
         final k2 = fallbackKey.trim().toLowerCase();
         if (_categoryCoversMap.containsKey(k2)) return _categoryCoversMap[k2];
       }
+      // Also try normalized key matching (ignoring punctuation, ampersands, spaces)
+      final normKey1 = k1.replaceAll(RegExp(r'[^a-z0-9]'), '');
+      if (normKey1.isNotEmpty) {
+        for (final entry in _categoryCoversMap.entries) {
+          final normEntry = entry.key.replaceAll(RegExp(r'[^a-z0-9]'), '');
+          if (normEntry.isNotEmpty &&
+              (normEntry == normKey1 ||
+                  normKey1.contains(normEntry) ||
+                  normEntry.contains(normKey1))) {
+            return entry.value;
+          }
+        }
+      }
       return null;
     }
 
@@ -401,6 +418,25 @@ class GroceryProvider extends ChangeNotifier {
       final isVis = cover != null ? (cover['isActive'] != false) : cat.isVisible;
       if (!isVis) continue;
 
+      String? resolvedImageUrl = (cover?['imageUrl'] as String?)?.trim();
+      if (resolvedImageUrl == null || resolvedImageUrl.isEmpty) {
+        resolvedImageUrl = cat.imageUrl?.trim();
+      }
+      if (resolvedImageUrl == null || resolvedImageUrl.isEmpty) {
+        final catLower = cat.name.trim().toLowerCase();
+        final catIdLower = cat.id.trim().toLowerCase();
+        for (final p in _products) {
+          final pCatLower = p.category.trim().toLowerCase();
+          if ((pCatLower == catLower ||
+                  pCatLower == catIdLower ||
+                  catLower.contains(pCatLower)) &&
+              p.imageUrl.trim().isNotEmpty) {
+            resolvedImageUrl = p.imageUrl.trim();
+            break;
+          }
+        }
+      }
+
       aggregated.add(
         CategoryModel(
           id: cat.id,
@@ -411,7 +447,7 @@ class GroceryProvider extends ChangeNotifier {
           itemCount: '$count Item${count == 1 ? '' : 's'}',
           icon: cat.icon,
           colorHex: cover?['colorHex'] as String? ?? cat.colorHex,
-          imageUrl: cover?['imageUrl'] as String? ?? cat.imageUrl,
+          imageUrl: resolvedImageUrl,
           tag: cover?['tag'] as String? ?? cat.tag,
           order: cover != null && cover['order'] != null
               ? (cover['order'] as num).toInt()
