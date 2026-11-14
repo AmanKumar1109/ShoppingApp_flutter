@@ -233,14 +233,19 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            '$count ${count == 1 ? "item" : "items"} for "$_currentQuery"',
-            style: const TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w800,
-              color: Color(0xFF19251B),
+          Expanded(
+            child: Text(
+              '$count ${count == 1 ? "item" : "items"} for "$_currentQuery"',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+                color: Color(0xFF19251B),
+              ),
             ),
           ),
+          const SizedBox(width: 8),
           PopupMenuButton<SearchSortType>(
             initialValue: _sortType,
             onSelected: (val) {
