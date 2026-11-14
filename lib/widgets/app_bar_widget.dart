@@ -125,7 +125,7 @@ class HomeAppBarWidget extends ConsumerWidget implements PreferredSizeWidget {
                       barrierDismissible: true,
                       barrierLabel: 'Notifications',
                       barrierColor: Colors.black.withValues(alpha: 0.35),
-                      pageBuilder: (ctx, anim1, anim2) => const Align(
+                      pageBuilder: (ctx, _, __) => const Align(
                         alignment: Alignment.centerRight,
                         child: NotificationEndDrawer(),
                       ),
@@ -169,7 +169,10 @@ class HomeAppBarWidget extends ConsumerWidget implements PreferredSizeWidget {
                             decoration: BoxDecoration(
                               color: const Color(0xFFF7C415),
                               shape: BoxShape.circle,
-                              border: Border.all(color: Colors.white, width: 1.5),
+                              border: Border.all(
+                                color: Colors.white,
+                                width: 1.5,
+                              ),
                             ),
                             child: Center(
                               child: Text(
