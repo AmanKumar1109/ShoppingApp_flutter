@@ -160,11 +160,24 @@ class NotificationService {
     }
   }
 
+  static final Set<String> _processedMessageFingerprints = {};
+
   /// Displays a heads-up local banner notification when a push is received while in foreground.
   Future<void> _showForegroundLocalNotification(RemoteMessage message) async {
     final notification = message.notification;
     final title = notification?.title ?? message.data['title'] ?? 'GroceryHub Alert';
     final body = notification?.body ?? message.data['body'] ?? '';
+
+    // De-duplicate rapid or twin push messages
+    final fingerprint = message.messageId ?? '${title.trim()}_${body.trim()}';
+    if (_processedMessageFingerprints.contains(fingerprint)) {
+      debugPrint('[NotificationService] Duplicate message ignored: $fingerprint');
+      return;
+    }
+    _processedMessageFingerprints.add(fingerprint);
+    if (_processedMessageFingerprints.length > 50) {
+      _processedMessageFingerprints.remove(_processedMessageFingerprints.first);
+    }
 
     final androidDetails = AndroidNotificationDetails(
       _channel.id,
