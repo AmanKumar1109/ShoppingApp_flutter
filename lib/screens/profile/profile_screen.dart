@@ -4,6 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../../providers/auth_provider.dart';
 import '../../routes/app_routes.dart';
 import '../../widgets/app_bar_widget.dart';
+import '../../widgets/notification_drawer.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -64,6 +65,7 @@ class ProfileScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF9FAFB),
+      endDrawer: const NotificationEndDrawer(),
       body: Column(
         children: [
           // Soft Yellow Header matching Home Screen

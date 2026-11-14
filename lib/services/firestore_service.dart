@@ -187,10 +187,28 @@ class FirestoreService {
         orderMap['fcmToken'] = token;
       }
 
-      await _firestore
-          .collection('orders')
-          .doc(order.orderId)
-          .set(orderMap);
+      await _firestore.collection('orders').doc(order.orderId).set(orderMap);
+
+      // Save order confirmation notification in user's notifications subcollection
+      final uid = order.userId.trim();
+      if (uid.isNotEmpty) {
+        await _firestore
+            .collection('users')
+            .doc(uid)
+            .collection('notifications')
+            .doc('order_${order.orderId}_created')
+            .set({
+          'title': '🎉 Order Confirmed!',
+          'body':
+              'Your order #${order.orderId} of ₹${order.totalAmount.toStringAsFixed(0)} has been placed. We are preparing your fresh groceries!',
+          'type': 'order',
+          'orderId': order.orderId,
+          'status': 'Order Received',
+          'route': '/orders',
+          'isRead': false,
+          'createdAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
+      }
 
       // Enqueue order confirmation email
       await enqueueOrderMail(order);
@@ -263,16 +281,16 @@ class FirestoreService {
             .collection('notifications')
             .doc(notifDocId)
             .set({
-          'title': '⚠️ Order Cancelled',
-          'body':
-              'Your order #$orderId has been cancelled. Any prepaid amount will be refunded to your source payment method.',
-          'type': 'order',
-          'orderId': orderId,
-          'status': 'Cancelled',
-          'route': '/orders',
-          'isRead': false,
-          'createdAt': FieldValue.serverTimestamp(),
-        }, SetOptions(merge: true));
+              'title': '⚠️ Order Cancelled',
+              'body':
+                  'Your order #$orderId has been cancelled. Any prepaid amount will be refunded to your source payment method.',
+              'type': 'order',
+              'orderId': orderId,
+              'status': 'Cancelled',
+              'route': '/orders',
+              'isRead': false,
+              'createdAt': FieldValue.serverTimestamp(),
+            }, SetOptions(merge: true));
       }
       return true;
     } catch (e) {
@@ -436,8 +454,10 @@ class FirestoreService {
     if (cleanCode.isEmpty) return null;
     try {
       // First check document ID directly
-      final directDoc =
-          await _firestore.collection('coupons').doc(cleanCode).get();
+      final directDoc = await _firestore
+          .collection('coupons')
+          .doc(cleanCode)
+          .get();
       if (directDoc.exists && directDoc.data() != null) {
         return {'id': directDoc.id, ...directDoc.data()!};
       }

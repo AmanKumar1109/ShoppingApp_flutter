@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/notification_model.dart';
+import '../models/order_model.dart';
 import '../services/firestore_service.dart';
 
 final notificationProvider =
@@ -19,6 +20,7 @@ class NotificationProvider extends ChangeNotifier {
 
   List<NotificationModel> _broadcastList = [];
   List<NotificationModel> _personalList = [];
+  List<OrderModel> _ordersList = [];
   List<NotificationModel> _mergedNotifications = [];
 
   final Set<String> _dismissedIds = {};
@@ -26,6 +28,7 @@ class NotificationProvider extends ChangeNotifier {
 
   StreamSubscription<List<NotificationModel>>? _broadcastSub;
   StreamSubscription<List<NotificationModel>>? _personalSub;
+  StreamSubscription<List<OrderModel>>? _ordersSub;
   StreamSubscription<User?>? _authSub;
 
   String? _currentUserId;
@@ -58,7 +61,7 @@ class NotificationProvider extends ChangeNotifier {
       },
     );
 
-    // Listen to Auth State to stream user personal notifications
+    // Listen to Auth State to stream user personal notifications & orders
     _authSub = FirebaseAuth.instance.authStateChanges().listen((user) {
       final newUid = user?.uid;
       if (newUid != _currentUserId) {
@@ -73,12 +76,16 @@ class NotificationProvider extends ChangeNotifier {
 
   void _subscribeToPersonalNotifications() {
     _personalSub?.cancel();
+    _ordersSub?.cancel();
+
     if (_currentUserId == null || _currentUserId!.isEmpty) {
       _personalList = [];
+      _ordersList = [];
       _recomputeMergedList();
       return;
     }
 
+    // 1. Personal Firestore notifications (explicit notifications subcollection)
     _personalSub = _firestoreService
         .streamUserNotifications(_currentUserId!)
         .listen(
@@ -88,6 +95,19 @@ class NotificationProvider extends ChangeNotifier {
           },
           onError: (err) {
             debugPrint('Personal notifications stream error: $err');
+          },
+        );
+
+    // 2. Orders Stream: Automatically guarantees every order placed, cancelled, or updated is in notifications
+    _ordersSub = _firestoreService
+        .streamUserOrders(_currentUserId!)
+        .listen(
+          (orders) {
+            _ordersList = orders;
+            _recomputeMergedList();
+          },
+          onError: (err) {
+            debugPrint('Orders notifications stream error: $err');
           },
         );
   }
@@ -107,14 +127,61 @@ class NotificationProvider extends ChangeNotifier {
   void _recomputeMergedList() {
     final Map<String, NotificationModel> map = {};
 
-    // 1. Add Personal Notifications
+    // 1. Synthesize from Live Orders (Immediate visibility for placed, cancelled, delivered orders)
+    for (final order in _ordersList) {
+      final normalizedStatus = order.status.trim().toLowerCase();
+      final statusKey = normalizedStatus.replaceAll(RegExp(r'\s+'), '_');
+      final notifId = 'order_${order.orderId}_$statusKey';
+
+      if (_dismissedIds.contains(notifId)) continue;
+
+      String title;
+      String body;
+      DateTime notifDate = order.createdAt;
+
+      if (normalizedStatus.contains('cancel')) {
+        title = '⚠️ Order Cancelled';
+        body =
+            'Your order #${order.orderId} has been cancelled. Any prepaid amount will be refunded to your source account.';
+        notifDate = order.updatedAt;
+      } else if (normalizedStatus.contains('deliver')) {
+        title = '🛍️ Order Delivered!';
+        body =
+            'Great news! Your GroceryHub order #${order.orderId} has been safely delivered.';
+        notifDate = order.updatedAt;
+      } else if (normalizedStatus.contains('out for delivery')) {
+        title = '🚚 Order Out for Delivery!';
+        body =
+            'Your order #${order.orderId} is on the way with our delivery partner.';
+        notifDate = order.updatedAt;
+      } else {
+        title = '🎉 Order Confirmed!';
+        body =
+            'Your order #${order.orderId} of ₹${order.totalAmount.toStringAsFixed(0)} has been placed. We are preparing your fresh groceries!';
+      }
+
+      map[notifId] = NotificationModel(
+        id: notifId,
+        title: title,
+        body: body,
+        type: 'order',
+        orderId: order.orderId,
+        status: order.status,
+        route: '/orders',
+        createdAt: notifDate,
+        isRead: _readIds.contains(notifId),
+        isPersonal: true,
+      );
+    }
+
+    // 2. Personal Notifications (Explicit documents from users/{userId}/notifications)
     for (final n in _personalList) {
       if (!_dismissedIds.contains(n.id)) {
         map[n.id] = n;
       }
     }
 
-    // 2. Add Broadcast Notifications (If duplicate id, personal takes precedence)
+    // 3. Broadcast Notifications from Admin Dashboard
     for (final n in _broadcastList) {
       if (!_dismissedIds.contains(n.id) && !map.containsKey(n.id)) {
         map[n.id] = n;
@@ -206,6 +273,7 @@ class NotificationProvider extends ChangeNotifier {
   void dispose() {
     _broadcastSub?.cancel();
     _personalSub?.cancel();
+    _ordersSub?.cancel();
     _authSub?.cancel();
     super.dispose();
   }

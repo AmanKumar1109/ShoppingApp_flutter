@@ -9,6 +9,7 @@ import '../../services/firestore_service.dart';
 import '../../widgets/app_bar_widget.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/fast_cached_image.dart';
+import '../../widgets/notification_drawer.dart';
 
 class OrdersScreen extends ConsumerWidget {
   const OrdersScreen({super.key});
@@ -29,6 +30,7 @@ class OrdersScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF9FAFB),
+      endDrawer: const NotificationEndDrawer(),
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/user_model.dart';
 import '../providers/auth_provider.dart';
 import '../providers/notification_provider.dart';
+import 'notification_drawer.dart';
 
 class HomeAppBarWidget extends ConsumerWidget implements PreferredSizeWidget {
   const HomeAppBarWidget({super.key});
@@ -115,7 +116,21 @@ class HomeAppBarWidget extends ConsumerWidget implements PreferredSizeWidget {
 
               return GestureDetector(
                 onTap: () {
-                  Scaffold.of(context).openEndDrawer();
+                  final scaffold = Scaffold.maybeOf(context);
+                  if (scaffold != null && scaffold.hasEndDrawer) {
+                    scaffold.openEndDrawer();
+                  } else {
+                    showGeneralDialog(
+                      context: context,
+                      barrierDismissible: true,
+                      barrierLabel: 'Notifications',
+                      barrierColor: Colors.black.withValues(alpha: 0.35),
+                      pageBuilder: (ctx, anim1, anim2) => const Align(
+                        alignment: Alignment.centerRight,
+                        child: NotificationEndDrawer(),
+                      ),
+                    );
+                  }
                 },
                 child: Container(
                   width: 42,
