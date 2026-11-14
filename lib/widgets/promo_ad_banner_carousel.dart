@@ -135,9 +135,8 @@ class _PromoAdBannerCarouselState extends State<PromoAdBannerCarousel> {
       ],
       accentColor: Color(0xFFA855F7),
       targetTitle: 'Cadbury Brownies & Chocolates',
-      sectionType: 'bakery',
+      sectionType: 'all',
       searchTerm: 'brownie',
-      categoryId: 'cat_bakery',
     ),
     PromoAdBannerItem(
       title: 'Weekend Super\nGrocery Saver',
@@ -168,9 +167,8 @@ class _PromoAdBannerCarouselState extends State<PromoAdBannerCarousel> {
       ],
       accentColor: Color(0xFFEC4899),
       targetTitle: 'Cadbury Silk & Chocolates',
-      sectionType: 'bakery',
+      sectionType: 'all',
       searchTerm: 'dairy milk',
-      categoryId: 'cat_bakery',
     ),
     PromoAdBannerItem(
       title: 'Farm Fresh\nDaily Dairy',

@@ -1209,22 +1209,14 @@ class _HomeTabState extends ConsumerState<HomeTab> {
           _buildSectionHeader(
             title: section['title'] ?? targetCat,
             onSeeAll: () {
-              final lowerCat = targetCat.toLowerCase().trim();
-              String secType = 'category';
-              if (lowerCat.contains('bakery') || lowerCat.contains('biscuit')) {
-                secType = 'bakery';
-              } else if (lowerCat.contains('baby')) {
-                secType = 'baby';
-              }
               Navigator.pushNamed(
                 context,
                 AppRoutes.catalog,
                 arguments: {
                   'title': section['title'] ?? targetCat,
-                  'sectionType': secType,
-                  'categoryId':
-                      section['categoryId'] ?? section['targetCategory'],
-                  'categoryName': section['targetCategory'] ?? section['title'],
+                  'sectionType': 'category',
+                  'categoryId': targetCat,
+                  'categoryName': targetCat,
                 },
               );
             },
@@ -1268,11 +1260,7 @@ class _HomeTabState extends ConsumerState<HomeTab> {
       void openBannerCatalog() {
         final lower = targetCat.toLowerCase().trim();
         String secType = 'category';
-        if (lower.contains('bakery') || lower.contains('biscuit')) {
-          secType = 'bakery';
-        } else if (lower.contains('baby')) {
-          secType = 'baby';
-        } else if (lower.contains('deal')) {
+        if (lower.contains('deal')) {
           secType = 'deals';
         } else if (lower.contains('trend')) {
           secType = 'trending';
@@ -1290,8 +1278,7 @@ class _HomeTabState extends ConsumerState<HomeTab> {
                 ? title
                 : (targetCat.isNotEmpty ? targetCat : 'Special Deals'),
             'sectionType': secType,
-            'categoryId': section['categoryId'] ??
-                (targetCat.isNotEmpty ? targetCat : null),
+            'categoryId': targetCat.isNotEmpty ? targetCat : null,
             'categoryName': targetCat,
           },
         );

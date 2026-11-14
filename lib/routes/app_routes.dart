@@ -115,7 +115,7 @@ class AppRoutes {
         },
         catalog: (context) {
           final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>? ?? {};
-          final cat = args['categoryId'] ?? args['categoryName'] ?? args['targetCategory'];
+          final cat = args['categoryName'] ?? args['targetCategory'] ?? args['categoryId'];
           return CatalogScreen(
             title: args['title'] ?? 'Products Catalogue',
             categoryId: cat is String ? cat : cat?.toString(),
