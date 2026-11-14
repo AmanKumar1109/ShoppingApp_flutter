@@ -166,84 +166,99 @@ class CategoriesScreen extends ConsumerWidget {
                             ],
                           ),
                           child: Stack(
+                            alignment: Alignment.center,
                             children: [
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 6,
-                                  vertical: 8,
-                                ),
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    // Category Cover Image
-                                    Container(
-                                      width: 60,
-                                      height: 60,
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFFFFF9E5),
-                                        borderRadius: BorderRadius.circular(15),
-                                        border: Border.all(
-                                          color: const Color(0xFFFFF0B3),
-                                          width: 1,
+                              // Full-width centered container to ensure 100% mathematical center alignment
+                              SizedBox(
+                                width: double.infinity,
+                                height: double.infinity,
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 8,
+                                  ),
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                    children: [
+                                      // Category Cover Image (Strictly Centered)
+                                      Center(
+                                        child: Container(
+                                          width: 60,
+                                          height: 60,
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFFFFF9E5),
+                                            borderRadius: BorderRadius.circular(15),
+                                            border: Border.all(
+                                              color: const Color(0xFFFFF0B3),
+                                              width: 1,
+                                            ),
+                                          ),
+                                          child: ClipRRect(
+                                            borderRadius: BorderRadius.circular(14),
+                                            child: hasImage
+                                                ? FastCachedImage(
+                                                    imageUrl: category.imageUrl!.trim(),
+                                                    width: 60,
+                                                    height: 60,
+                                                    fit: BoxFit.cover,
+                                                    errorWidget: Center(
+                                                      child: Icon(
+                                                        category.iconData,
+                                                        size: 26,
+                                                        color: const Color(0xFF19251B),
+                                                      ),
+                                                    ),
+                                                  )
+                                                : Center(
+                                                    child: Icon(
+                                                      category.iconData,
+                                                      size: 26,
+                                                      color: const Color(0xFF19251B),
+                                                    ),
+                                                  ),
+                                          ),
                                         ),
                                       ),
-                                      child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(14),
-                                        child: hasImage
-                                            ? FastCachedImage(
-                                                imageUrl: category.imageUrl!.trim(),
-                                                width: 60,
-                                                height: 60,
-                                                fit: BoxFit.cover,
-                                                errorWidget: Center(
-                                                  child: Icon(
-                                                    category.iconData,
-                                                    size: 26,
-                                                    color: const Color(0xFF19251B),
-                                                  ),
-                                                ),
-                                              )
-                                            : Center(
-                                                child: Icon(
-                                                  category.iconData,
-                                                  size: 26,
-                                                  color: const Color(0xFF19251B),
-                                                ),
-                                              ),
+                                      const SizedBox(height: 8),
+                                      SizedBox(
+                                        width: double.infinity,
+                                        child: Text(
+                                          category.name,
+                                          textAlign: TextAlign.center,
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w700,
+                                            color: Color(0xFF19251B),
+                                            height: 1.15,
+                                          ),
+                                        ),
                                       ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      category.name,
-                                      textAlign: TextAlign.center,
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w700,
-                                        color: Color(0xFF19251B),
-                                        height: 1.15,
+                                      const SizedBox(height: 2),
+                                      SizedBox(
+                                        width: double.infinity,
+                                        child: Text(
+                                          category.itemCount,
+                                          textAlign: TextAlign.center,
+                                          style: const TextStyle(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.w600,
+                                            color: Color(0xFF007A3D),
+                                          ),
+                                        ),
                                       ),
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      category.itemCount,
-                                      textAlign: TextAlign.center,
-                                      style: const TextStyle(
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w600,
-                                        color: Color(0xFF007A3D),
-                                      ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
                               ),
                               // Optional Dynamic Tag Badge (e.g. HOT, NEW, SALE)
                               if (category.tag != null &&
                                   category.tag!.trim().isNotEmpty)
                                 Positioned(
-                                  top: 5,
-                                  right: 5,
+                                  top: 6,
+                                  right: 6,
                                   child: Container(
                                     padding: const EdgeInsets.symmetric(
                                       horizontal: 5,
