@@ -13,9 +13,7 @@ class CategoriesScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final grocery = ref.watch(groceryProvider);
-    final categories = grocery.categories
-        .where((c) => c.id != 'all')
-        .toList();
+    final categories = grocery.categories.where((c) => c.id != 'all').toList();
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -122,22 +120,25 @@ class CategoriesScreen extends ConsumerWidget {
           Expanded(
             child: categories.isEmpty
                 ? const Center(
-                    child: CircularProgressIndicator(
-                      color: Color(0xFF19251B),
-                    ),
+                    child: CircularProgressIndicator(color: Color(0xFF19251B)),
                   )
                 : GridView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 3,
-                      childAspectRatio: 0.72,
-                      crossAxisSpacing: 10,
-                      mainAxisSpacing: 14,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 8,
                     ),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 3,
+                          childAspectRatio: 0.72,
+                          crossAxisSpacing: 10,
+                          mainAxisSpacing: 14,
+                        ),
                     itemCount: categories.length,
                     itemBuilder: (context, index) {
                       final category = categories[index];
-                      final hasImage = category.imageUrl != null &&
+                      final hasImage =
+                          category.imageUrl != null &&
                           category.imageUrl!.trim().isNotEmpty;
 
                       return GestureDetector(
@@ -179,7 +180,8 @@ class CategoriesScreen extends ConsumerWidget {
                                   ),
                                   child: Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
-                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
                                     children: [
                                       // Category Cover Image (Strictly Centered)
                                       Center(
@@ -188,17 +190,22 @@ class CategoriesScreen extends ConsumerWidget {
                                           height: 60,
                                           decoration: BoxDecoration(
                                             color: const Color(0xFFFFF9E5),
-                                            borderRadius: BorderRadius.circular(15),
+                                            borderRadius: BorderRadius.circular(
+                                              15,
+                                            ),
                                             border: Border.all(
                                               color: const Color(0xFFFFF0B3),
                                               width: 1,
                                             ),
                                           ),
                                           child: ClipRRect(
-                                            borderRadius: BorderRadius.circular(14),
+                                            borderRadius: BorderRadius.circular(
+                                              14,
+                                            ),
                                             child: hasImage
                                                 ? FastCachedImage(
-                                                    imageUrl: category.imageUrl!.trim(),
+                                                    imageUrl: category.imageUrl!
+                                                        .trim(),
                                                     width: 60,
                                                     height: 60,
                                                     fit: BoxFit.cover,
@@ -206,7 +213,9 @@ class CategoriesScreen extends ConsumerWidget {
                                                       child: Icon(
                                                         category.iconData,
                                                         size: 26,
-                                                        color: const Color(0xFF19251B),
+                                                        color: const Color(
+                                                          0xFF19251B,
+                                                        ),
                                                       ),
                                                     ),
                                                   )
@@ -214,7 +223,9 @@ class CategoriesScreen extends ConsumerWidget {
                                                     child: Icon(
                                                       category.iconData,
                                                       size: 26,
-                                                      color: const Color(0xFF19251B),
+                                                      color: const Color(
+                                                        0xFF19251B,
+                                                      ),
                                                     ),
                                                   ),
                                           ),
